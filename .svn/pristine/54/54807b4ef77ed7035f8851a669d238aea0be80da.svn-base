@@ -1,0 +1,226 @@
+package kr.or.ddit.admin.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.admin.dao.AdminDaoImpl;
+import kr.or.ddit.admin.dao.IadminDao;
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.util.MybatisUtil;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public class AdminServiceImpl implements IadminService {
+	private IadminDao dao = null;
+	private static IadminService service= new AdminServiceImpl();
+
+ private AdminServiceImpl(){
+	 dao =AdminDaoImpl.getinsetance();	 
+ }
+ 
+ public static IadminService getinsetance() {
+	 return service;
+ }
+ 
+	@Override
+	public Map<String, Object> selectMemberListData(PageVO pageVO) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		Map<String, Object> resultMap =new HashMap<String, Object>();
+		try {
+			List<MemberVO> list=dao.selectMemberList(session,pageVO);
+			int totalCount =dao.selectMemberCount(session,pageVO);
+			int todayCount = dao.selectTodayJoinCount(session);
+			
+			resultMap.put("memberList", list);
+			resultMap.put("totalCount", totalCount);
+			resultMap.put("todayCount", todayCount);
+			
+		}finally {
+			session.close();
+		}
+		return resultMap;
+	}
+
+	@Override
+	public int selectMemberCount(PageVO pageVO) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		int count =0;
+		
+		try {
+			count=dao.selectMemberCount(session, pageVO);
+		}finally {
+			session.close();
+		}
+		return count;
+	}
+
+	@Override
+	public MemberVO selectMemberDetail(String memberId) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		MemberVO member=null;
+		
+		try {
+		member=dao.selectMemberDetail(session, memberId);
+		
+		}finally {
+			session.close();
+		}
+		return member;
+	}
+
+	@Override
+	public int updateMemberRole(String memberId, String role) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		
+		Map<String, String> param = new HashMap<String, String>();
+		param.put("memberId", memberId);
+		param.put("role", role);
+		
+		int cnt =0;
+		
+		try {
+			
+			cnt=dao.updateMemberRole(session,param);
+			
+			if(cnt >0) {
+				session.commit();
+			}else {
+				session.rollback();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}
+		finally {
+			session.close();
+		}
+		return cnt;
+	}
+
+	@Override
+	public int updateMemberStatus(String memberId, String status) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		
+		Map<String, String> param = new HashMap<String, String>();
+		param.put("memberId", memberId);
+		param.put("status", status);
+		
+		int cnt =0;
+		
+		try {
+			
+			cnt=dao.updateMemberStatus(session,param);
+			
+			if(cnt >0) {
+				session.commit();
+			}else {
+				session.rollback();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}
+		finally {
+			session.close();
+		}
+		return cnt;
+	}
+	
+
+	@Override
+	public int deleteMember(String memberId) {
+SqlSession session =MybatisUtil.getsqlsession();
+
+		int cnt =0;
+		
+		try {
+			
+			cnt=dao.deleteMember(session,memberId);
+			
+			if(cnt >0) {
+				session.commit();
+			}else {
+				session.rollback();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}
+		finally {
+			session.close();
+		}
+		return cnt;
+	}
+
+	@Override
+	public List<Volunteer_RecruitVO> selectRecruitList() {
+		SqlSession session =MybatisUtil.getsqlsession();
+		List<Volunteer_RecruitVO> list =null;
+		
+		try {
+			list =dao.selectRecruitList(session);
+		}finally {
+			session.close();
+		}
+		return list;
+	}
+
+	@Override
+	public Volunteer_RecruitVO selectRecruitDetail(int recruitId) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		Volunteer_RecruitVO vo = null;
+
+		try {
+			vo = dao.selectRecruitDetail(session, recruitId);
+		} finally {
+			session.close();
+		}
+
+		return vo;
+	}
+
+	@Override
+	public List<Volunteer_ApplyVO> selectApplyListByRecruitId(int recruitId) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		List<Volunteer_ApplyVO> list = null;
+
+		try {
+			list = dao.selectApplyListByRecruitId(session, recruitId);
+		} finally {
+			session.close();
+		}
+
+		return list;
+	}
+
+	@Override
+	public int updateApplyStatus(Map<String, Object> param) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		int result = 0;
+
+		try {
+			result = dao.updateApplyStatus(session, param);
+
+			if (result > 0) {
+				session.commit();
+			} else {
+				session.rollback();
+			}
+		} catch (Exception e) {
+			session.rollback();
+			throw e;
+		} finally {
+			session.close();
+		}
+
+		return result;
+	}
+
+
+
+
+}

@@ -1,0 +1,12 @@
+document.addEventListener("DOMContentLoaded", function () {
+	const todayDate = document.getElementById("todayDate");
+
+	if (todayDate) {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = now.getMonth() + 1;
+		const date = now.getDate();
+
+		todayDate.textContent = `${year}년 ${month}월 ${date}일`;
+	}
+});

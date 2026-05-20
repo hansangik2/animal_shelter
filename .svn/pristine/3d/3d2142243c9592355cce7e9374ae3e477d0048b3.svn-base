@@ -1,0 +1,361 @@
+package kr.or.ddit.admin.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.admin.dao.AdminDaoImpl;
+import kr.or.ddit.admin.dao.IadminDao;
+import kr.or.ddit.animal.dao.AnimalDaoImpl;
+import kr.or.ddit.animal.dao.IAnimalDao;
+import kr.or.ddit.animal.dto.AnimalDetailDto;
+import kr.or.ddit.animal.service.AnimalServiceImpl;
+import kr.or.ddit.animal.service.IAnimalService;
+import kr.or.ddit.animal.vo.AnimalImageVO;
+import kr.or.ddit.animal.vo.AnimalMedicalVO;
+import kr.or.ddit.animal.vo.AnimalRescueVO;
+import kr.or.ddit.animal.vo.AnimalVO;
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.util.MybatisUtil;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public class AdminServiceImpl implements IadminService {
+	private IadminDao dao = null;
+	private static IadminService service= new AdminServiceImpl();
+
+ private AdminServiceImpl(){
+	 dao =AdminDaoImpl.getinsetance();	 
+ }
+ 
+ public static IadminService getinsetance() {
+	 return service;
+ }
+ 
+	@Override
+	public Map<String, Object> selectMemberListData(PageVO pageVO) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		Map<String, Object> resultMap =new HashMap<String, Object>();
+		try {
+			List<MemberVO> list=dao.selectMemberList(session,pageVO);
+			int totalCount =dao.selectMemberCount(session,pageVO);
+			int todayCount = dao.selectTodayJoinCount(session);
+			
+			resultMap.put("memberList", list);
+			resultMap.put("totalCount", totalCount);
+			resultMap.put("todayCount", todayCount);
+			
+		}finally {
+			session.close();
+		}
+		return resultMap;
+	}
+
+	@Override
+	public int selectMemberCount(PageVO pageVO) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		int count =0;
+		
+		try {
+			count=dao.selectMemberCount(session, pageVO);
+		}finally {
+			session.close();
+		}
+		return count;
+	}
+
+	@Override
+	public MemberVO selectMemberDetail(String memberId) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		MemberVO member=null;
+		
+		try {
+		member=dao.selectMemberDetail(session, memberId);
+		
+		}finally {
+			session.close();
+		}
+		return member;
+	}
+
+	@Override
+	public int updateMemberRole(String memberId, String role) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		
+		Map<String, String> param = new HashMap<String, String>();
+		param.put("memberId", memberId);
+		param.put("role", role);
+		
+		int cnt =0;
+		
+		try {
+			
+			cnt=dao.updateMemberRole(session,param);
+			
+			if(cnt >0) {
+				session.commit();
+			}else {
+				session.rollback();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}
+		finally {
+			session.close();
+		}
+		return cnt;
+	}
+
+	@Override
+	public int updateMemberStatus(String memberId, String status) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		
+		Map<String, String> param = new HashMap<String, String>();
+		param.put("memberId", memberId);
+		param.put("status", status);
+		
+		int cnt =0;
+		
+		try {
+			
+			cnt=dao.updateMemberStatus(session,param);
+			
+			if(cnt >0) {
+				session.commit();
+			}else {
+				session.rollback();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}
+		finally {
+			session.close();
+		}
+		return cnt;
+	}
+	
+
+	@Override
+	public int deleteMember(String memberId) {
+SqlSession session =MybatisUtil.getsqlsession();
+
+		int cnt =0;
+		
+		try {
+			
+			cnt=dao.deleteMember(session,memberId);
+			
+			if(cnt >0) {
+				session.commit();
+			}else {
+				session.rollback();
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}
+		finally {
+			session.close();
+		}
+		return cnt;
+	}
+
+	@Override
+	public List<Volunteer_RecruitVO> selectRecruitList() {
+		SqlSession session =MybatisUtil.getsqlsession();
+		List<Volunteer_RecruitVO> list =null;
+		
+		try {
+			list =dao.selectRecruitList(session);
+		}finally {
+			session.close();
+		}
+		return list;
+	}
+
+	@Override
+	public Volunteer_RecruitVO selectRecruitDetail(int recruitId) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		Volunteer_RecruitVO vo = null;
+
+		try {
+			vo = dao.selectRecruitDetail(session, recruitId);
+		} finally {
+			session.close();
+		}
+
+		return vo;
+	}
+
+	@Override
+	public List<Volunteer_ApplyVO> selectApplyListByRecruitId(int recruitId) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		List<Volunteer_ApplyVO> list = null;
+
+		try {
+			list = dao.selectApplyListByRecruitId(session, recruitId);
+		} finally {
+			session.close();
+		}
+
+		return list;
+	}
+
+	@Override
+	public int updateApplyStatus(Map<String, Object> param) {
+		SqlSession session = MybatisUtil.getsqlsession();
+		int result = 0;
+
+		try {
+			result = dao.updateApplyStatus(session, param);
+
+			if (result > 0) {
+				session.commit();
+			} else {
+				session.rollback();
+			}
+		} catch (Exception e) {
+			session.rollback();
+			throw e;
+		} finally {
+			session.close();
+		}
+
+		return result;
+	}
+
+	@Override
+	public List<AnimalVO> selectAdminAnimalList(PageVO pageVO) {
+		 SqlSession session = MybatisUtil.getsqlsession();
+		    List<AnimalVO> list = null;
+		    try {
+		        list = dao.selectAdminAnimalList(session, pageVO);
+		    } finally {
+		        // 조회(SELECT)는 commit/rollback 불필요, finally에서 무조건 close
+		        session.close();
+		    }
+		    return list;
+	}
+
+	@Override
+	public int updateAnimalStatus(int animalId, String newStatus) {
+		SqlSession session = MybatisUtil.getsqlsession();
+
+	    // map에 두 값을 담아서 DAO로 전달 → xml의 #{animalId}, #{newStatus}로 매핑
+	    Map<String, Object> param = new HashMap<>();
+	    param.put("animalId", animalId);
+	    param.put("newStatus", newStatus);
+
+	    int cnt = 0;
+	    try {
+	        cnt = dao.updateAnimalStatus(session, param);
+	        // DML은 반드시 commit/rollback 처리
+	        if (cnt > 0) session.commit();
+	        else         session.rollback();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        session.rollback();
+	    } finally {
+	        session.close();
+	    }
+	    return cnt;
+	}
+
+	@Override
+	public int deleteAnimal(int animalId) {
+		 SqlSession session = MybatisUtil.getsqlsession();
+		    int cnt = 0;
+		    try {
+		        cnt = dao.deleteAnimal(session, animalId);
+		        if (cnt > 0) session.commit();
+		        else         session.rollback();
+		    } catch (Exception e) {
+		        e.printStackTrace();
+		        session.rollback();
+		    } finally {
+		        session.close();
+		    }
+		    return cnt;
+	}
+
+	@Override
+	public int selectAdminAnimalCount(PageVO pageVO) {
+		SqlSession session = MybatisUtil.getsqlsession();
+	    int count = 0;
+	    try {
+	        count = dao.selectAdminAnimalCount(session, pageVO);
+	    } finally {
+	        session.close();
+	    }
+	    return count;
+	}
+
+	@Override
+	public boolean updateAnimal(AnimalVO animal, AnimalMedicalVO medical, AnimalRescueVO rescue,
+			List<AnimalImageVO> imageList, boolean hasNewMainImage) {
+		SqlSession session =MybatisUtil.getsqlsession();
+		 boolean isSuccess = false;
+		try {
+			//1. 동물 기본정보 수정
+			int cnt = dao.updateAnimal(session, animal);
+			
+			if(cnt == 0 ) {
+				session.rollback();
+				return false;
+			}
+			//2. 의료정보수정
+			if(medical !=null) {
+				dao.updateAnimalMedical(session, medical);
+			}
+			
+			//3. 동물 구조정보 수정
+			 if (rescue != null) {
+		            dao.updateAnimalRescue(session, rescue);
+		        }
+			 
+
+		        // 4. 이미지 처리
+		        // 새 이미지가 있을 때만 기존 이미지 삭제 후 새로 INSERT
+		        // 새 이미지가 없으면 기존 이미지 그대로 유지
+		        if (hasNewMainImage && imageList != null && !imageList.isEmpty()) {
+		            // 기존 이미지 전체 삭제
+		            dao.deleteAnimalImages(session, animal.getAnimalId());
+		            
+		            // 새 이미지 INSERT
+		            // insertAnimalImage는 기존 IadminDao에 없으므로 AnimalDaoImpl 재사용
+		            IAnimalDao<SqlSession> animalDao = AnimalDaoImpl.getInstance();
+		            for (AnimalImageVO image : imageList) {
+		                image.setAnimalId(animal.getAnimalId());
+		                animalDao.insertAnimalImage(session, image);
+		            	}
+		        	}
+		        session.commit();
+		        isSuccess = true;
+		
+	}catch (Exception e) {
+		e.printStackTrace();
+        session.rollback();
+        return false;
+	}finally {
+		session.close();
+	}
+		return isSuccess;
+}
+
+	@Override
+	public AnimalDetailDto getAnimalDetailForEdit(int animalId) {
+		// 기존 AnimalServiceImpl의 getAnimalDetail() 재사용
+	    // 수정 페이지 진입 시 기존 데이터 조회용
+	    IAnimalService animalService = AnimalServiceImpl.getInstance();
+	    return animalService.getAnimalDetail(animalId);
+	}
+
+
+
+
+}

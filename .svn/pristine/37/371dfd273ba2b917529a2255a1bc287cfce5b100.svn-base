@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="admin">
+
+<!--=============================== SELECT 영역 ===============================   -->
+<select id="selectMemberList" parameterType="PageVO" resultType="MemberVO">
+	SELECT * FROM (
+		SELECT ROWNUM RN, A.* FROM (
+			SELECT
+				MEMBER_ID AS memberId,
+				NICKNAME AS nickname,
+				EMAIL AS email,
+				JOIN_DATE AS joinDate,
+				STATUS AS status,
+				ROLE AS role
+			FROM MEMBER
+			WHERE 1=1
+			<if test="keyword != null and keyword != ''">
+				AND (
+					MEMBER_ID LIKE '%' || #{keyword} || '%'
+					OR NICKNAME LIKE '%' || #{keyword} || '%'
+					OR EMAIL LIKE '%' || #{keyword} || '%'
+				)
+			</if>
+			<if test="status != null and status != ''">
+				AND STATUS = #{status}
+			</if>
+			<if test="role != null and role != ''">
+		AND ROLE = #{role}
+			</if>
+			
+			ORDER BY JOIN_DATE DESC, MEMBER_ID DESC
+		) A
+		WHERE ROWNUM &lt;= #{endRow}
+	)
+	WHERE RN &gt;= #{startRow}
+</select>
+
+<select id="selectMemberCount" parameterType="PageVO" resultType="int">
+	SELECT COUNT(*)
+	FROM MEMBER
+	WHERE 1=1
+
+	<if test="keyword != null and keyword != ''">
+		AND (
+			MEMBER_ID LIKE '%' || #{keyword} || '%'
+			OR NICKNAME LIKE '%' || #{keyword} || '%'
+			OR EMAIL LIKE '%' || #{keyword} || '%'
+		)
+	</if>
+
+	<if test="status != null and status != ''">
+		AND STATUS = #{status}
+	</if>
+	
+	<if test="role != null and role != ''">
+		AND ROLE = #{role}
+	</if>
+</select>
+
+<select id="selectTodayJoinCount" resultType="int">
+	select count(*) from member where trunc(JOIN_DATE)
+	= TRUNC(SYSDATE)
+</select>
+
+<select id="selectRecruitDetail" parameterType="int" resultType="Volunteer_RecruitVO">
+
+SELECT
+		RECRUIT_ID     AS recruitId,
+		TITLE          AS title,
+		CONTENT        AS content,
+		VOLUNTEER_DATE AS volunteerDate,
+		LOCATION       AS location,
+		APPLY_DEADLINE AS applyDeadline,
+		CREATE_DATE    AS createDate,
+		STATUS         AS status,
+		MEMBER_ID      AS memberId,
+		THUMBNAIL_IMG  AS thumbnailImg
+	FROM VOLUNTEER_RECRUIT
+	WHERE RECRUIT_ID = #{recruitId}
+
+</select>
+
+<select id="selectRecruitList" resultType="Volunteer_RecruitVO">
+	SELECT
+			RECRUIT_ID      AS recruitId,
+			TITLE           AS title,
+			CONTENT         AS content,
+			VOLUNTEER_DATE  AS volunteerDate,
+			LOCATION        AS location,
+			APPLY_DEADLINE  AS applyDeadline,
+			CREATE_DATE     AS createDate,
+			STATUS          AS status,
+			MEMBER_ID       AS memberId,
+			THUMBNAIL_IMG   AS thumbnailImg
+		FROM VOLUNTEER_RECRUIT
+		ORDER BY CREATE_DATE DESC, RECRUIT_ID DESC
+</select>
+
+
+<select id="selectApplyListByRecruitId" parameterType="int" resultType="Volunteer_ApplyVO">
+	SELECT
+		VA.VOLUNTEER_ID   AS volunteerId,
+			VA.MEMBER_ID      AS memberId,
+			VA.RECRUIT_ID     AS recruitId,
+			VA.INTEREST_TYPE  AS interestType,
+			VA.STATUS         AS status,
+			VA.APPLY_REASON   AS applyReason,
+			VA.APPLY_DATE     AS applyDate,
+			VA.VOLUNTEER_DATE AS volunteerDate,
+			M.NICKNAME        AS nickname,
+			M.PHONE           AS phone
+		FROM VOLUNTEER_APPLY VA
+		JOIN MEMBER M
+		  ON VA.MEMBER_ID = M.MEMBER_ID
+		WHERE VA.RECRUIT_ID = #{recruitId}
+		ORDER BY VA.APPLY_DATE DESC, VA.VOLUNTEER_ID DESC
+
+</select>
+
+<select id="selectMemberDetail" parameterType="string" resultType="MemberVO">
+	SELECT
+		MEMBER_ID AS memberId,
+		MEMBER_PW AS memberPw,
+		NICKNAME AS nickname,
+		EMAIL AS email,
+		PHONE AS phone,
+		JOIN_DATE AS joinDate,
+		STATUS AS status,
+		ROLE AS role,
+		PROFILE_IMG AS profileImg,
+		MEMBER_NAME AS memberName
+	FROM MEMBER
+	WHERE MEMBER_ID = #{memberId}
+</select>
+<!--=============================== SELECT 영역 ===============================   -->
+
+
+<!--=============================== UPDATE 영역 ===============================   -->
+<update id="updateMemberRole" parameterType="map" >
+	UPDATE MEMBER
+	SET ROLE = #{role}
+	WHERE MEMBER_ID =#{memberId}
+</update>
+
+<update id="updateMemberStatus" parameterType="map">
+	UPDATE MEMBER
+	SET STATUS =#{status}
+	WHERE MEMBER_ID =#{memberId}
+</update>
+
+<update id="updateApplyStatus" parameterType="map">
+		UPDATE VOLUNTEER_APPLY
+		SET STATUS = #{status}
+		WHERE VOLUNTEER_ID = #{volunteerId}
+	</update>
+
+<!--=============================== UPDATE 영역 ===============================   -->
+
+
+<!--=============================== DELETE 영역 ===============================   -->
+<delete id="deleteMember" parameterType ="String">
+	DELETE FROM MEMBER
+	WHERE MEMBER_ID =#{memberId}
+</delete>
+</mapper>

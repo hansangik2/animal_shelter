@@ -1,0 +1,69 @@
+package kr.or.ddit.report.service;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.report.dao.IReportDao;
+import kr.or.ddit.report.dao.ReportDaoImpl;
+import kr.or.ddit.report.vo.AnimalReportVO;
+import kr.or.ddit.report.vo.MemberReportVO;
+import kr.or.ddit.util.MybatisUtil;
+
+public class ReportServiceImpl implements IReportService{
+	private static IReportService service =new ReportServiceImpl();
+	private IReportDao dao;
+	
+	private ReportServiceImpl() {
+		dao=ReportDaoImpl.getdao();
+	}
+	
+	public static IReportService getservice() {
+		return service;
+	}
+	
+	@Override
+	public int insertAnimalReport(AnimalReportVO vo) {
+		int cnt =0;
+		SqlSession session=MybatisUtil.getsqlsession(); 
+		
+		try {
+		cnt=dao.insertAnimalReport(session, vo);	
+			
+		if(cnt>0) {
+			session.commit();
+		}else {
+			session.rollback();
+		}
+		System.out.println("insert cnt = " + cnt);
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}finally {
+			session.close();
+		}
+		return cnt;
+	}
+
+	@Override
+	public int insertMemberRepor(MemberReportVO vo) {
+		int cnt =0;
+		SqlSession session=MybatisUtil.getsqlsession(); 
+		
+		try {
+		cnt=dao.insertMemberRepor(session, vo);	
+			
+		if(cnt>0) {
+			session.commit();
+		}else {
+			session.rollback();
+		}
+		System.out.println("insert cnt = " + cnt);
+		}catch (Exception e) {
+			e.printStackTrace();
+			session.rollback();
+		}finally {
+			session.close();
+		}
+		return cnt;
+	}
+
+}

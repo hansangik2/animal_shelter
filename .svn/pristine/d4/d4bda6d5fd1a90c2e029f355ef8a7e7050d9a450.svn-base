@@ -1,0 +1,522 @@
+
+'use strict';
+
+const CTX = window.CTX || '';
+
+const state = {
+  currentPage:  (window.PAGE_INFO && window.PAGE_INFO.currentPage) || 1,
+  totalCount:   (window.PAGE_INFO && window.PAGE_INFO.totalCount)  || 0,
+  pageSize:     (window.PAGE_INFO && window.PAGE_INFO.pageSize)    || 5,
+  donFilter: { keyword:'', paymentType:'', method:'' },
+  calcOpen:     false,
+  calcExpr:     '',
+  calcDisplay:  '0',
+  calcHistory:  [],
+  activeTab:    'all',
+  activeDrawer: null,
+};
+
+const fmt = n => Number(n || 0).toLocaleString('ko-KR');
+
+function showToast(msg, type = 'info', duration = 3000) {
+  const icons = { success:'check_circle', error:'error', info:'info' };
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast toast--${type}`;
+  t.innerHTML = `<span class="material-symbols-outlined">${icons[type]||'info'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('leaving'); setTimeout(() => t.remove(), 220); }, duration);
+}
+
+function closeAllCtx() {
+  document.querySelectorAll('.ctx-menu.visible').forEach(m => m.classList.remove('visible'));
+}
+
+/* TABS */
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      state.activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+    });
+  });
+}
+
+/* PAGINATION */
+function renderPagination() {
+  const wrap = document.getElementById('donPagination');
+  if (!wrap) return;
+
+  const total = state.totalCount; // 전체 데이터 건수
+  const size  = state.pageSize;   // 페이지당 건수 (5)
+  const cur   = state.currentPage; // 현재 페이지
+  const pages = Math.max(1, Math.ceil(total / size)); // 전체 페이지 수
+  const start = (cur - 1) * size + 1; // 현재 페이지 시작 건 번호
+  const end   = Math.min(cur * size, total); // 현재 페이지 끝 건 번호
+
+  // "총 N건의 내역 중 M-K 표시" 텍스트 갱신
+  const info = document.getElementById('donPagInfo');
+  if (info) info.textContent = `총 ${total}건의 내역 중 ${start}-${end} 표시`;
+
+  // 이전 버튼 (1페이지면 disabled)
+  let html = `<button class="page-btn" onclick="changePage(${cur-1})" ${cur<=1?'disabled':''}>
+                <span class="material-symbols-outlined">chevron_left</span></button>`;
+
+  /*
+   * ✅ 페이지 번호 범위 계산 — 최대 3개 표시
+   *    - 조건: 맨 첫 페이지(1), 맨 끝 페이지(pages), 현재 페이지 앞뒤 각 1개
+   *    - 단, 3개를 초과하지 않도록 cur-1 ~ cur+1 범위만 포함
+   *    - 예) 총 4페이지, 현재 2페이지 → 1, 2, 3 표시
+   *         총 4페이지, 현재 4페이지 → 3, 4 표시
+   */
+  /*const range = Array.from({length: pages}, (_, i) => i + 1)
+    .filter(p =>
+      p === 1 ||           // 맨 첫 페이지는 항상 표시
+      p === pages ||       // 맨 끝 페이지는 항상 표시
+      (p >= cur - 1 && p <= cur + 1) // 현재 ±1 범위만 (최대 3개)
+    );
+
+  range.forEach((p, i) => {
+    // 페이지 번호 사이 간격이 2 이상이면 ... 표시
+    if (i > 0 && p - range[i-1] > 1) {
+      html += `<span style="padding:0 4px;color:var(--slate-400)">…</span>`;
+    }
+    html += `<button class="page-btn${p === cur ? ' active' : ''}" onclick="changePage(${p})">${p}</button>`;
+  }); */
+  
+  /*
+    * 최대 3개 연속 번호만 표시
+    * - blockStart: 현재 페이지 기준으로 3개 블록의 시작 번호 계산
+    *   예) cur=1 → blockStart=1 (1,2,3)
+    *       cur=2 → blockStart=1 (1,2,3)
+    *       cur=3 → blockStart=2 (2,3,4)  ← cur-1
+    *       cur=4 → blockStart=2 (2,3,4)  ← 끝에 맞춰 조정
+    */
+   const SHOW = 3; // 보여줄 페이지 버튼 개수
+   // cur 기준 중앙 배치: cur-1 ~ cur+1, 단 범위를 벗어나면 조정
+   let blockStart = Math.max(1, cur - 1);                   // cur-1 부터 시작
+   let blockEnd   = Math.min(pages, blockStart + SHOW - 1); // 최대 SHOW개
+   // 끝이 잘리면 시작을 당겨서 항상 SHOW개 유지
+   if (blockEnd - blockStart < SHOW - 1) {
+     blockStart = Math.max(1, blockEnd - SHOW + 1);
+   }
+
+   for (let p = blockStart; p <= blockEnd; p++) {
+     html += `<button class="page-btn${p === cur ? ' active' : ''}" onclick="changePage(${p})">${p}</button>`;
+   }
+
+
+  // 다음 버튼 (마지막 페이지면 disabled)
+  html += `<button class="page-btn" onclick="changePage(${cur+1})" ${cur>=pages?'disabled':''}>
+             <span class="material-symbols-outlined">chevron_right</span></button>`;
+
+  wrap.innerHTML = html;
+}
+
+/* FILTER */
+function initDonationFilters() {
+  document.getElementById('donSearch')?.addEventListener('keydown', e => { if(e.key==='Enter') submitFilter(); });
+  document.getElementById('donTypeFilter')?.addEventListener('change', submitFilter);
+  document.getElementById('donMethodFilter')?.addEventListener('change', submitFilter);
+}
+
+function submitFilter() {
+  const keyword     = document.getElementById('donSearch')?.value.trim() || '';
+  const paymentType = document.getElementById('donTypeFilter')?.value    || '';
+  const method      = document.getElementById('donMethodFilter')?.value  || '';
+  const url = new URL(window.location.href);
+  url.searchParams.set('page','1');
+  url.searchParams.set('keyword',keyword);
+  url.searchParams.set('paymentType',paymentType);
+  url.searchParams.set('method',method);
+  window.location.href = url.toString();
+}
+
+function initHeaderSearch() {
+  const hs = document.getElementById('headerSearch');
+  const ds = document.getElementById('donSearch');
+  hs?.addEventListener('input', e => { if(ds) ds.value = e.target.value; });
+  hs?.addEventListener('keydown', e => { if(e.key==='Enter') submitFilter(); });
+}
+
+/* CONTEXT MENU */
+function bindCtxMenus() {
+  document.querySelectorAll('[data-ctx]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const menu = document.getElementById(`ctx-${btn.dataset.ctx}`);
+      if(!menu) return;
+      const isVisible = menu.classList.contains('visible');
+      closeAllCtx();
+      if(!isVisible) menu.classList.add('visible');
+    });
+  });
+}
+
+function bindCtxActions() {
+  document.querySelectorAll('[data-action]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const {action,id} = el.dataset;
+      closeAllCtx();
+      if(action==='detail') openDrawer(+id);
+      if(action==='edit')   openEditModal(+id);
+      if(action==='delete') openDeleteConfirm(+id);
+    });
+  });
+}
+
+/* DETAIL DRAWER */
+function openDrawer(id) {
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if(!row) return;
+  state.activeDrawer = id;
+  const cells = row.querySelectorAll('td');
+  document.getElementById('drawerDonorName').textContent = cells[1]?.textContent.trim()||'—';
+  document.getElementById('drawerAmount').textContent    = cells[2]?.textContent.trim()||'—';
+  document.getElementById('drawerDate').textContent      = cells[0]?.textContent.trim()||'—';
+  document.getElementById('drawerType').innerHTML        = cells[3]?.innerHTML||'—';
+  document.getElementById('drawerMethod').innerHTML      = cells[4]?.innerHTML||'—';
+  document.getElementById('drawerId').textContent        = `#${id}`;
+  document.getElementById('drawerOverlay').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('show');
+  document.getElementById('drawer').classList.remove('show');
+  state.activeDrawer = null;
+}
+
+function initDrawer() {
+  document.getElementById('drawerClose')?.addEventListener('click', closeDrawer);
+  document.getElementById('drawerOverlay')?.addEventListener('click', closeDrawer);
+  document.getElementById('drawerEditBtn')?.addEventListener('click', () => {
+    const id = state.activeDrawer; closeDrawer(); openEditModal(id);
+  });
+}
+
+/* EDIT MODAL */
+function openEditModal(id) {
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if(!row) return;
+  const cells = row.querySelectorAll('td');
+  document.getElementById('editId').value     = id;
+  document.getElementById('editName').value   = cells[1]?.textContent.trim()||'';
+  document.getElementById('editAmount').value = (cells[2]?.textContent||'').replace(/[₩,원\s]/g,'');
+  const typeText = cells[3]?.textContent.trim();
+  const em = document.getElementById('editType');
+  if(em) em.value = typeText.includes('정기') ? '정기' : '일시';
+  const mm = document.getElementById('editMethod');
+  if(mm) mm.value = cells[4]?.textContent.trim().includes('카드') ? '카드결제' : '계좌이체';
+  document.getElementById('editModal').classList.add('show');
+}
+
+function initEditModal() {
+  document.getElementById('editModalClose')?.addEventListener('click', ()=>document.getElementById('editModal').classList.remove('show'));
+  document.getElementById('editModalCancel')?.addEventListener('click', ()=>document.getElementById('editModal').classList.remove('show'));
+  document.getElementById('editModalSave')?.addEventListener('click', ()=>{
+    const id=document.getElementById('editId').value;
+    const name=document.getElementById('editName').value.trim();
+    const amount=document.getElementById('editAmount').value;
+    const type=document.getElementById('editType').value;
+    const method=document.getElementById('editMethod')?.value||'';
+    if(!name||!amount){showToast('이름과 금액을 입력해주세요.','error');return;}
+    fetch(`${CTX}/admin/donation/update.do`,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({donationId:id,donatorName:name,donationAmount:amount,donationType:type,donationMethod:method}),
+    }).then(r=>r.json()).then(data=>{
+      document.getElementById('editModal').classList.remove('show');
+      if(data.success){showToast('후원 내역이 수정되었습니다.','success');setTimeout(()=>location.reload(),900);}
+      else showToast(data.message||'수정 중 오류가 발생했습니다.','error');
+    }).catch(()=>showToast('서버와 통신 중 문제가 발생했습니다.','error'));
+  });
+}
+
+/* DELETE MODAL */
+let deleteTargetId = null;
+function openDeleteConfirm(id) {
+  deleteTargetId = id;
+  const name = document.querySelector(`tr[data-id="${id}"]`)?.querySelectorAll('td')[1]?.textContent.trim()||'이 후원자';
+  document.getElementById('deleteTargetName').textContent = name;
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function initDeleteModal() {
+  document.getElementById('deleteModalClose')?.addEventListener('click', ()=>document.getElementById('deleteModal').classList.remove('show'));
+  document.getElementById('deleteModalCancel')?.addEventListener('click', ()=>document.getElementById('deleteModal').classList.remove('show'));
+  document.getElementById('deleteModalConfirm')?.addEventListener('click', ()=>{
+    if(deleteTargetId===null) return;
+    fetch(`${CTX}/admin/donation/delete.do`,{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({donationId:deleteTargetId}),
+    }).then(r=>r.json()).then(data=>{
+      document.getElementById('deleteModal').classList.remove('show');
+      deleteTargetId=null;
+      if(data.success){showToast('후원 내역이 삭제되었습니다.','error');setTimeout(()=>location.reload(),900);}
+      else showToast(data.message||'삭제 중 오류가 발생했습니다.','error');
+    }).catch(()=>showToast('서버와 통신 중 문제가 발생했습니다.','error'));
+  });
+}
+
+/* RECEIPT FILTER */
+function initReceiptFilters(){
+  // 탭 안 pills (id="receiptTabPills")
+  document.getElementById('receiptTabPills')?.querySelectorAll('.pill-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.getElementById('receiptTabPills').querySelectorAll('.pill-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      filterReceiptRows('receiptTableBody', btn.dataset.filter);
+    });
+  });
+
+  // 하단 카드 pills (id="receiptBottomPills")
+  document.getElementById('receiptBottomPills')?.querySelectorAll('.pill-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.getElementById('receiptBottomPills').querySelectorAll('.pill-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      filterReceiptRows('receiptTableBodyBottom', btn.dataset.filter);
+    });
+  });
+
+   ['receiptTableBody','receiptTableBodyBottom'].forEach(tbId=>{
+      document.getElementById(tbId)?.addEventListener('change',e=>{
+        if(!e.target.matches('[data-receipt-id]')) return;
+        const donationId=e.target.dataset.receiptId;
+        const isChecked=e.target.checked;
+        // 발급완료='I', 신청상태로 되돌리기='Y'
+        const newStatus=isChecked?'I':'Y';
+        const tr=e.target.closest('tr');
+        const badge=tr?.querySelector('.badge');
+        const name=tr?.querySelector('.td-name')?.textContent||'';
+
+        fetch(`${CTX}/admin/updateReceiptStatus.do`,{
+          method:'POST',
+          headers:{'Content-Type':'application/x-www-form-urlencoded'},
+          body:`donationId=${donationId}&receiptYn=${newStatus}`
+        })
+        .then(res=>res.json())
+        .then(data=>{
+          if(data.result==='success'){
+            // UI 업데이트
+            if(badge){
+              badge.className=isChecked?'badge badge--issued':'badge badge--waiting';
+              badge.textContent=isChecked?'발급완료':'대기중';
+            }
+            // 동기화: 두 tbody의 같은 donationId 행도 함께 업데이트
+            ['receiptTableBody','receiptTableBodyBottom'].forEach(id=>{
+              const otherChk=document.querySelector(`#${id} input[data-receipt-id="${donationId}"]`);
+              if(otherChk&&otherChk!==e.target){
+                otherChk.checked=isChecked;
+                const otherBadge=otherChk.closest('tr')?.querySelector('.badge');
+                if(otherBadge){
+                  otherBadge.className=isChecked?'badge badge--issued':'badge badge--waiting';
+                  otherBadge.textContent=isChecked?'발급완료':'대기중';
+                }
+              }
+            });
+            showToast(isChecked?`${name}님 영수증 발급 완료!`:`${name}님 발급 대기 전환`,isChecked?'success':'info');
+          }else{
+            alert('DB 저장 중 오류가 발생했습니다.');
+            e.target.checked=!isChecked; // 실패 시 원복
+          }
+        })
+        .catch(err=>{console.error(err);e.target.checked=!isChecked;});
+      });
+    });
+  }
+
+
+function filterReceiptRows(tbodyId, filter) {
+  document.querySelectorAll(`#${tbodyId} tr`).forEach(row=>{
+    const badge=row.querySelector('.badge');
+    if(!badge) return;
+    if(filter==='all'){row.style.display='';return;}
+    const isIssued=badge.classList.contains('badge--issued');
+    row.style.display=(filter==='issued'?isIssued:!isIssued)?'':'none';
+  });
+}
+
+/* EXCEL 엑셀*/
+function downloadExcel() {
+  if(typeof XLSX==='undefined'){showToast('SheetJS 라이브러리를 불러오는 중입니다.','error');return;}
+  showToast('엑셀 파일을 생성 중입니다…','info',1800);
+  const url=new URL(window.location.href);
+  const params=new URLSearchParams({keyword:url.searchParams.get('keyword')||'',method:url.searchParams.get('method')||'',paymentType:url.searchParams.get('paymentType')||'',startDate:url.searchParams.get('startDate')||'',endDate:url.searchParams.get('endDate')||''});
+  fetch(`${CTX}/admin/donation/excel.do?${params}`).then(r=>r.json()).then(data=>{
+    if(!data.success) throw new Error(data.message);
+    const rows=(data.data||[]).map(d=>({'내역번호':d.donationId,'후원일자':d.donationDateStr||'','기부자명':d.donatorName||'','회원ID':d.memberId||'','금액(원)':d.donationAmount,'결제수단':d.donationMethod||'','후원유형':d.donationType||'','영수증신청':d.receiptYn==='Y'?'신청':'미신청'}));
+    const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);
+    const range=XLSX.utils.decode_range(ws['!ref']||'A1');
+    ws['!cols']=Array.from({length:range.e.c+1},(_,C)=>{let max=10;for(let R=range.s.r;R<=range.e.r;R++){const cell=ws[XLSX.utils.encode_cell({r:R,c:C})];if(cell?.v!=null)max=Math.max(max,String(cell.v).length);}return{wch:Math.min(max+2,40)};});
+    XLSX.utils.book_append_sheet(wb,ws,'후원내역');
+    const today=new Date(),ymd=`${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+    XLSX.writeFile(wb,`기부관리현황_${ymd}.xlsx`);
+    setTimeout(()=>showToast('엑셀 다운로드가 완료되었습니다.','success',3000),400);
+  }).catch(err=>{console.error(err);showToast('엑셀 생성 중 오류가 발생했습니다.','error');});
+}
+
+function initExcelDownload(){document.getElementById('btnExcel')?.addEventListener('click',downloadExcel);}
+
+/* CALCULATOR 하... 복잡하다..*/
+function initCalc() {
+  const fab=document.getElementById('calcFab'),panel=document.getElementById('calcPanel');
+  if(!fab||!panel) return;
+  fab.addEventListener('click',()=>{state.calcOpen=!state.calcOpen;panel.classList.toggle('open',state.calcOpen);});
+  document.getElementById('calcClose')?.addEventListener('click',()=>{state.calcOpen=false;panel.classList.remove('open');});
+  document.querySelectorAll('.calc-key').forEach(k=>k.addEventListener('click',()=>calcInput(k.dataset.key)));
+  document.addEventListener('keydown',e=>{
+    if(!state.calcOpen) return;
+    const map={'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','+':'+','-':'-','*':'×','/':'÷','.':'.','Enter':'=','Backspace':'⌫','Escape':'C','=':'='};
+    if(map[e.key]){e.preventDefault();calcInput(map[e.key]);}
+  });
+  function calcInput(key){
+    const disp=document.getElementById('calcDisplay'),expr=document.getElementById('calcExpr'),hist=document.getElementById('calcHistory');
+    if(key==='C'){state.calcExpr='';state.calcDisplay='0';}
+    else if(key==='⌫'){state.calcExpr=state.calcExpr.slice(0,-1);state.calcDisplay=state.calcExpr||'0';}
+    else if(key==='='){
+      if(!state.calcExpr) return;
+      try{const norm=state.calcExpr.replace(/×/g,'*').replace(/÷/g,'/');const r=String(parseFloat(Function(`"use strict";return(${norm})`)().toFixed(10)));state.calcHistory.unshift(`${state.calcExpr} = ${r}`);if(state.calcHistory.length>5)state.calcHistory.pop();state.calcDisplay=r;state.calcExpr=r;}
+      catch{state.calcDisplay='오류';state.calcExpr='';}
+    }else if(key==='%'){
+      try{const norm=state.calcExpr.replace(/×/g,'*').replace(/÷/g,'/');const r=String(parseFloat((Function(`"use strict";return(${norm})`)()/100).toFixed(10)));state.calcExpr=r;state.calcDisplay=r;}catch{}
+    }else{state.calcExpr+=key;state.calcDisplay=state.calcExpr;}
+    disp.textContent=state.calcDisplay;
+    expr.textContent=state.calcExpr!==state.calcDisplay?state.calcExpr:'';
+    hist.innerHTML=state.calcHistory.map(h=>`<div class="calc-history__item">${h}</div>`).join('');
+  }
+  document.getElementById('calcCopy')?.addEventListener('click',()=>navigator.clipboard?.writeText(state.calcDisplay).then(()=>showToast('결과가 클립보드에 복사되었습니다.','success',1800)));
+  document.getElementById('calcInsert')?.addEventListener('click',()=>{const ra=document.getElementById('regAmount');if(ra&&!isNaN(+state.calcDisplay)){ra.value=state.calcDisplay;document.getElementById('registerModal')?.classList.add('show');state.calcOpen=false;panel.classList.remove('open');showToast('금액이 수동 등록 폼에 입력되었습니다.','info');}});
+}
+
+/* OUTSIDE CLICK */
+document.addEventListener('click',e=>{
+  if(!e.target.closest('[data-ctx]')&&!e.target.closest('.ctx-menu')) closeAllCtx();
+  ['editModal','deleteModal','registerModal'].forEach(id=>{const el=document.getElementById(id);if(el&&e.target===el)el.classList.remove('show');});
+});
+
+/* ══════════════════════════════════════
+   MANUAL REGISTER MODAL (기부 수동 등록)
+══════════════════════════════════════ */
+function initRegisterModal() {
+    const btnOpen = document.getElementById('btnManualRegister'); 
+    
+    // 모달 및 닫기 버튼들
+    const modal = document.getElementById('registerModal');
+    const btnClose = document.getElementById('registerModalClose');
+    const btnCancel = document.getElementById('registerModalCancel');
+    const btnSave = document.getElementById('registerModalSave');
+
+    // 1. 모달 열기
+    if (btnOpen && modal) {
+        btnOpen.addEventListener('click', () => {
+            // 열 때마다 이전 입력값 초기화
+            document.getElementById('regName').value = '';
+            document.getElementById('regTel').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regAmount').value = '';
+            document.getElementById('regType').value = '정기';
+            document.getElementById('regMethod').value = '카드';
+            
+            modal.classList.add('show');
+        });
+    }
+
+    // 2. 모달 닫기
+    const closeModal = () => modal.classList.remove('show');
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+    // 3. 등록 버튼 클릭 시 (추후 Ajax 연동)
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            const name = document.getElementById('regName').value.trim();
+            const amount = document.getElementById('regAmount').value.trim();
+            
+            if(!name || !amount) {
+                showToast('필수 항목(기부자명, 금액)을 입력해주세요.', 'error');
+                return;
+            }
+            
+            // TODO: 서버로 데이터 전송 (fetch API 사용)
+            console.log("등록 진행:", { name, amount });
+            showToast('수동 등록이 완료되었습니다.', 'success');
+            closeModal();
+        });
+    }
+}
+
+/* ══════════════════════════════════════
+   대시보드 통계 카드 클릭 이벤트 (Drill-down)
+══════════════════════════════════════ */
+function initDashboardCards() {
+    // 1. 이번 달 기부 건수 -> 이번 달 1일~말일로 날짜 필터 세팅 후 검색
+    document.getElementById('cardThisMonthCount')?.addEventListener('click', () => {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        // JSP의 날짜 검색 input ID가 searchStartDate, searchEndDate가 맞는지 확인 후 수정하세요!
+        const startInput = document.getElementById('searchStartDate');
+        const endInput = document.getElementById('searchEndDate');
+        
+        if(startInput && endInput) {
+            startInput.value = firstDay;
+            endInput.value = lastDay;
+            document.getElementById('btnSearch')?.click(); 
+            showToast('이번 달 기부 내역으로 필터링되었습니다.', 'info');
+        }
+    });
+
+    // 2. 누적 기부금 -> 통계 페이지로 이동
+    document.getElementById('cardTotalAmount')?.addEventListener('click', () => {
+        location.href = CTX + '/admin/donationStats.do'; 
+    });
+
+    // 3. 영수증 신청 건수 -> 영수증 처리 탭으로 이동
+    document.getElementById('cardReceiptCount')?.addEventListener('click', () => {
+        const receiptTab = document.querySelector('.tab-btn[data-tab="receipt"]');
+        if(receiptTab) {
+            receiptTab.click();
+            document.querySelector('.data-table-section')?.scrollIntoView({behavior: 'smooth'});
+            showToast('미발급 영수증 목록입니다.', 'info');
+        }
+    });
+
+    // 4. 총 기부 건수 -> 필터 초기화 후 전체 검색
+    document.getElementById('cardTotalCount')?.addEventListener('click', () => {
+        const startInput = document.getElementById('searchStartDate');
+        const endInput = document.getElementById('searchEndDate');
+        const keywordInput = document.getElementById('searchKeyword');
+
+        if(startInput) startInput.value = '';
+        if(endInput) endInput.value = '';
+        if(keywordInput) keywordInput.value = '';
+        
+        document.getElementById('btnSearch')?.click();
+        showToast('전체 기부 내역입니다.', 'info');
+    });
+}
+
+/* INIT */
+document.addEventListener('DOMContentLoaded',()=>{
+  initTabs();
+  initDonationFilters();
+  initReceiptFilters();
+  initDrawer();
+  initEditModal();
+  initDeleteModal();
+  initExcelDownload();
+  initHeaderSearch();
+  initCalc();
+  bindCtxMenus();
+  bindCtxActions();
+  renderPagination();
+  initRegisterModal();
+  initDashboardCards();
+  
+});

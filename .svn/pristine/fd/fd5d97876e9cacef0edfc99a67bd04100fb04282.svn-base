@@ -1,0 +1,185 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+
+<%@ page import="java.util.List"%>
+<%@ page import="kr.or.ddit.board.vo.BoardCommentVO"%>
+<%@ page import="kr.or.ddit.board.vo.BoardFileVO"%>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>게시글 상세보기</title>
+
+<!-- 폰트 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com/"
+	crossorigin="anonymous">
+<link
+	href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&display=swap"
+	rel="stylesheet">
+
+<!-- 아이콘 -->
+<link
+	href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+	rel="stylesheet">
+
+<!-- CSS -->
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/css/common/common.css">
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/css/board-detail.css">
+</head>
+
+<body>
+
+	<%@ include file="/view/common/header.jsp"%>
+
+	<main class="detail-page">
+		<div class="detail-inner">
+
+			<div class="back-link">
+				<a href="${pageContext.request.contextPath}/board/list.do">←
+					목록으로 돌아가기</a>
+			</div>
+
+			<h2 class="detail-page-title">게시글 상세보기</h2>
+			<p class="detail-page-sub">게시글의 상세 내용을 확인할 수 있습니다.</p>
+
+			<div class="detail-box">
+
+				<div class="detail-type">${boardVo.boardType}</div>
+
+				<h3 class="detail-title">${boardVo.title}</h3>
+
+				<div class="detail-info">
+					<span>작성자: ${boardVo.memberId}</span> <span>작성일:
+						${boardVo.createDate}</span> <span>조회수: ${boardVo.viewCount}</span> <span>추천수:
+						${boardVo.likeCount}</span>
+				</div>
+
+				<div class="detail-content">
+					<pre>${boardVo.content}</pre>
+				</div>
+
+				<div class="detail-file">
+					<h4>첨부파일</h4>
+
+					<%
+				        List<BoardFileVO> fileList =
+				            (List<BoardFileVO>) request.getAttribute("fileList");
+				    
+				        if (fileList != null && fileList.size() > 0) {
+				        	for (BoardFileVO file : fileList) {
+				    %>
+					<div>
+						<a
+							href="${pageContext.request.contextPath}/board/fileDownload.do?fileId=<%= file.getFileId() %>">
+							<%= file.getOriginFileName() %>
+						</a>
+					</div>
+					<% 
+				        	}
+				        } else {
+				    %>
+					<div>첨부파일이 없습니다.</div>
+					<%
+				        }
+				    %>
+				</div>
+
+
+
+				<div class="detail-like-area">
+					<form action="${pageContext.request.contextPath}/board/detail.do"
+						method="post">
+						<input type="hidden" name="boardId" value="${boardVo.boardId}">
+						<button type="submit" class="detail-btn orange-btn">추천</button>
+					</form>
+				</div>
+
+				<div class="detail-btn-area">
+					<a
+						href="${pageContext.request.contextPath}/board/update.do?boardId=${boardVo.boardId}"
+						class="detail-btn orange-btn">수정하기</a> <a
+						href="${pageContext.request.contextPath}/board/delete.do?boardId=${boardVo.boardId}"
+						class="detail-btn gray-btn"
+						onclick="return confirm('정말 삭제하시겠습니까?');">삭제하기</a>
+				</div>
+
+			</div>
+
+			<!-- ================= 댓글 영역 ================= -->
+
+			<div class="comment-box">
+				<h3 class="comment-title">댓글</h3>
+
+				<!-- 댓글 작성 -->
+				<form method="post"
+					action="${pageContext.request.contextPath}/board/comment.do"
+					class="comment-form">
+
+					<input type="hidden" name="boardId" value="${boardVo.boardId}">
+
+					<div class="comment-row">
+						<label>작성자 ID</label> <input type="text" name="memberId"
+							value="a001">
+					</div>
+
+					<div class="comment-row">
+						<div class="comment-label-space"></div>
+						<textarea name="content" rows="4" placeholder="댓글을 입력하세요"></textarea>
+						<button type="submit" class="comment-submit-btn">댓글등록</button>
+					</div>
+				</form>
+
+				<!-- 댓글 리스트 -->
+				<div class="comment-list">
+
+					<%
+					List<BoardCommentVO> commentList = (List<BoardCommentVO>) request.getAttribute("commentList");
+
+					if (commentList == null || commentList.size() == 0) {
+					%>
+					<div class="comment-empty">등록된 댓글이 없습니다.</div>
+					<%
+					} else {
+					for (BoardCommentVO comment : commentList) {
+					%>
+
+					<div class="comment-item">
+						<div class="comment-meta">
+							<span class="comment-member"><%=comment.getMemberId()%></span> <span
+								class="comment-date"><%=comment.getCreateDate()%></span>
+
+							<!-- 삭제 버튼 -->
+							<form method="post"
+								action="<%= request.getContextPath() %>/board/commentDelete.do"
+								style="display: inline;">
+								<input type="hidden" name="commentId"
+									value="<%=comment.getCommentId()%>"> <input
+									type="hidden" name="boardId" value="<%=comment.getBoardId()%>">
+								<button type="submit">삭제</button>
+							</form>
+						</div>
+
+						<div class="comment-content">
+							<%=comment.getContent()%>
+						</div>
+					</div>
+
+					<%
+					}
+					}
+				%>
+
+				</div>
+			</div>
+
+		</div>
+	</main>
+
+	<%@ include file="/view/common/footer.jsp"%>
+
+</body>
+</html>

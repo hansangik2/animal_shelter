@@ -1,0 +1,49 @@
+package kr.or.ddit.report.controller;
+
+import java.io.IOException;
+
+import org.eclipse.jdt.internal.compiler.env.IModule.IService;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.report.service.IReportService;
+import kr.or.ddit.report.service.ReportServiceImpl;
+
+@WebServlet("/report/animal.do")
+@MultipartConfig(
+		fileSizeThreshold = 1024 * 1024,
+	    maxFileSize = 1024 * 1024 * 10,
+	    maxRequestSize = 1024 * 1024 * 50
+		)
+
+public class AnimalReportInsertController extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		
+		IReportService service = ReportServiceImpl.getservice();
+		
+		req.setCharacterEncoding("UTF-8");
+		
+		HttpSession session =req.getSession();
+		MemberVO loginUser =(MemberVO)session.getAttribute("logonUser");
+		
+		String memberId =null;
+		if(loginUser !=null) {
+			memberId= loginUser.getMemberId();
+		}
+		
+		String animalType =req.getParameter("animalType");
+		String location = req.getParameter("location");
+		String status = req.getParameter("status");
+		String content =req.getParameter("content");
+		
+	}
+
+}

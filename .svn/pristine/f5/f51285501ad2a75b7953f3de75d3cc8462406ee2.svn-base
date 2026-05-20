@@ -1,0 +1,15 @@
+package kr.or.ddit.donation.service;
+
+import java.util.List;
+
+import kr.or.ddit.donation.vo.DonationVO;
+
+public interface IDonationService {
+	
+	int insertDonation(DonationVO donationVO);
+	
+	public List<DonationVO> selectMyDonationList(String memberId);
+	
+	public DonationVO selectDonationForReceipt(int donationId, String memberId);
+
+}

@@ -1,0 +1,90 @@
+package kr.or.ddit.admin.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public class AdminDaoImpl implements IadminDao {
+	private static IadminDao dao= new AdminDaoImpl();
+	
+	
+	
+	private AdminDaoImpl() {}
+	
+	public static IadminDao getinsetance() {
+		return dao;
+	}
+
+
+	@Override
+	public int selectTodayJoinCount(SqlSession session) {
+		return session.selectOne("admin.selectTodayJoinCount");
+	}
+
+	@Override
+	public List<MemberVO> selectMemberList(SqlSession session, PageVO pageVO) {
+		
+		return session.selectList("admin.selectMemberList", pageVO);
+	}
+
+	@Override
+	public int selectMemberCount(SqlSession session, PageVO pageVO) {
+		
+		return session.selectOne("admin.selectMemberCount",pageVO);
+	}
+
+	@Override
+	public MemberVO selectMemberDetail(SqlSession session, String memberId) {
+		
+		return session.selectOne("admin.selectMemberDetail",memberId);
+	}
+
+	@Override
+	public int updateMemberRole(SqlSession session, Map<String, String> param) {
+			
+		return session.update("admin.updateMemberRole",param);
+	}
+
+	@Override
+	public int updateMemberStatus(SqlSession session, Map<String, String> param) {
+		
+		return session.update("admin.updateMemberStatus",param);
+	}
+
+	@Override
+	public int deleteMember(SqlSession session, String memberId) {
+		
+		return session.delete("admin.deleteMember",memberId);
+	}
+
+	@Override
+	public List<Volunteer_RecruitVO> selectRecruitList(SqlSession session) {
+		// TODO Auto-generated method stub
+		return session.selectList("admin.selectRecruitList");
+	}
+
+	@Override
+	public Volunteer_RecruitVO selectRecruitDetail(SqlSession session, int recruitId) {
+		// TODO Auto-generated method stub
+		return session.selectOne("admin.selectRecruitDetail", recruitId);
+	}
+
+	@Override
+	public List<Volunteer_ApplyVO> selectApplyListByRecruitId(SqlSession session, int recruitId) {
+		// TODO Auto-generated method stub
+		return session.selectList("admin.selectApplyListByRecruitId", recruitId);
+	}
+
+	@Override
+	public int updateApplyStatus(SqlSession session, Map<String, Object> param) {
+		// TODO Auto-generated method stub
+		return session.update("admin.updateApplyStatus", param);
+	}
+
+}

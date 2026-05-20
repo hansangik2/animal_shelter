@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<mapper namespace="admin">
+
+<!--=============================== SELECT 영역 ===============================   -->
+<select id="selectMemberList" parameterType="PageVO" resultType="MemberVO">
+	SELECT * FROM (
+		SELECT ROWNUM RN, A.* FROM (
+			SELECT
+				MEMBER_ID AS memberId,
+				NICKNAME AS nickname,
+				EMAIL AS email,
+				JOIN_DATE AS joinDate,
+				STATUS AS status,
+				ROLE AS role
+			FROM MEMBER
+			WHERE 1=1
+			<if test="keyword != null and keyword != ''">
+				AND (
+					MEMBER_ID LIKE '%' || #{keyword} || '%'
+					OR NICKNAME LIKE '%' || #{keyword} || '%'
+					OR EMAIL LIKE '%' || #{keyword} || '%'
+				)
+			</if>
+			<if test="status != null and status != ''">
+				AND STATUS = #{status}
+			</if>
+			<if test="role != null and role != ''">
+		AND ROLE = #{role}
+			</if>
+			
+			ORDER BY JOIN_DATE DESC, MEMBER_ID DESC
+		) A
+		WHERE ROWNUM &lt;= #{endRow}
+	)
+	WHERE RN &gt;= #{startRow}
+</select>
+
+<select id="selectMemberCount" parameterType="PageVO" resultType="int">
+	SELECT COUNT(*)
+	FROM MEMBER
+	WHERE 1=1
+
+	<if test="keyword != null and keyword != ''">
+		AND (
+			MEMBER_ID LIKE '%' || #{keyword} || '%'
+			OR NICKNAME LIKE '%' || #{keyword} || '%'
+			OR EMAIL LIKE '%' || #{keyword} || '%'
+		)
+	</if>
+
+	<if test="status != null and status != ''">
+		AND STATUS = #{status}
+	</if>
+	
+	<if test="role != null and role != ''">
+		AND ROLE = #{role}
+	</if>
+</select>
+
+<select id="selectTodayJoinCount" resultType="int">
+	select count(*) from member where trunc(JOIN_DATE)
+	= TRUNC(SYSDATE)
+</select>
+
+<select id="selectRecruitDetail" parameterType="int" resultType="Volunteer_RecruitVO">
+
+SELECT
+		RECRUIT_ID     AS recruitId,
+		TITLE          AS title,
+		CONTENT        AS content,
+		VOLUNTEER_DATE AS volunteerDate,
+		LOCATION       AS location,
+		APPLY_DEADLINE AS applyDeadline,
+		CREATE_DATE    AS createDate,
+		STATUS         AS status,
+		MEMBER_ID      AS memberId,
+		THUMBNAIL_IMG  AS thumbnailImg
+	FROM VOLUNTEER_RECRUIT
+	WHERE RECRUIT_ID = #{recruitId}
+
+</select>
+
+<select id="selectRecruitList" resultType="Volunteer_RecruitVO">
+	SELECT
+			RECRUIT_ID      AS recruitId,
+			TITLE           AS title,
+			CONTENT         AS content,
+			VOLUNTEER_DATE  AS volunteerDate,
+			LOCATION        AS location,
+			APPLY_DEADLINE  AS applyDeadline,
+			CREATE_DATE     AS createDate,
+			STATUS          AS status,
+			MEMBER_ID       AS memberId,
+			THUMBNAIL_IMG   AS thumbnailImg
+		FROM VOLUNTEER_RECRUIT
+		ORDER BY CREATE_DATE DESC, RECRUIT_ID DESC
+</select>
+
+
+<select id="selectApplyListByRecruitId" parameterType="int" resultType="Volunteer_ApplyVO">
+	SELECT
+		VA.VOLUNTEER_ID   AS volunteerId,
+			VA.MEMBER_ID      AS memberId,
+			VA.RECRUIT_ID     AS recruitId,
+			VA.INTEREST_TYPE  AS interestType,
+			VA.STATUS         AS status,
+			VA.APPLY_REASON   AS applyReason,
+			VA.APPLY_DATE     AS applyDate,
+			VA.VOLUNTEER_DATE AS volunteerDate,
+			M.NICKNAME        AS nickname,
+			M.PHONE           AS phone
+		FROM VOLUNTEER_APPLY VA
+		JOIN MEMBER M
+		  ON VA.MEMBER_ID = M.MEMBER_ID
+		WHERE VA.RECRUIT_ID = #{recruitId}
+		ORDER BY VA.APPLY_DATE DESC, VA.VOLUNTEER_ID DESC
+
+</select>
+
+<select id="selectMemberDetail" parameterType="string" resultType="MemberVO">
+	SELECT
+		MEMBER_ID AS memberId,
+		MEMBER_PW AS memberPw,
+		NICKNAME AS nickname,
+		EMAIL AS email,
+		PHONE AS phone,
+		JOIN_DATE AS joinDate,
+		STATUS AS status,
+		ROLE AS role,
+		PROFILE_IMG AS profileImg,
+		MEMBER_NAME AS memberName
+	FROM MEMBER
+	WHERE MEMBER_ID = #{memberId}
+</select>
+
+<sql id="adminAnimalFilter">
+<!--동물 종류 /전체조회시 null  -->
+<if test="animalType != null and animalType !=''">
+	AND A.ANIMAL_TYPE =#{animalType}
+</if>
+<!--입양 상태 : 입양가능/ 입양검토중 / 입양완료 ..  -->
+<if test ="adoptionStatus != null and adoptionStatus !=''">
+	AND A.ADOPTION_STATUS =#{adoptionStatus}
+</if>
+<!--키워드 : 동물이름 LIKE 검색   -->
+<if test="keyword !=null and keyword !=''">
+	AND A.ANIMAL_NAME LIKE '%' || #{keyword} ||'%'
+</if> 
+</sql>
+<!-- 필터 조건에 맞는 전체 건수 → 컨트롤러에서 totalPage 계산에 사용 -->
+    <select id="selectAdminAnimalCount" parameterType="PageVO" resultType="int">
+        SELECT COUNT(*)
+        FROM ANIMAL A
+        WHERE 1=1
+        <include refid="adminAnimalFilter"/>
+    </select>
+
+<!-- 
+        동물 목록 조회 (페이징 + 필터 + 메인이미지)
+        
+        3단 중첩 쿼리 구조 - 회원관리 selectMemberList와 동일한 Oracle 페이징 패턴:
+          1단계(안쪽): 원본 데이터 조회 + LEFT JOIN + 필터 + 정렬
+          2단계(중간): ROWNUM 부여 (정렬 후 번호 매기기 위해 중첩 필요)
+          3단계(바깥): startRow ~ endRow 범위만 추출
+    -->
+    
+     <select id="selectAdminAnimalList" parameterType="PageVO" resultType="AnimalVO">
+        SELECT * FROM (
+            SELECT ROWNUM AS RN, T.* FROM (
+                SELECT
+                    A.ANIMAL_ID       AS animalId,
+                    A.ANIMAL_NAME     AS animalName,
+                    A.ANIMAL_TYPE     AS animalType,
+                    A.BREED           AS breed,
+                    A.GENDER          AS gender,
+                    A.AGE             AS age,
+                    A.WEIGHT          AS weight,
+                    A.ADOPTION_STATUS AS adoptionStatus,
+                    A.PERSONALITY     AS personality,
+                    A.VIEW_COUNT      AS viewCount,
+                    A.CREATE_DATE     AS createDate,
+                    <!-- AnimalVO의 mainImage 필드에 매핑 → JSP 이미지 출력용 -->
+                    I.SAVE_FILE_NAME  AS mainImage
+                FROM ANIMAL A
+                <!-- LEFT JOIN: 이미지 없는 동물도 목록에 표시 -->
+                LEFT OUTER JOIN ANIMAL_IMAGE I
+                    ON A.ANIMAL_ID = I.ANIMAL_ID
+                   AND I.IS_MAIN = 'Y'
+                WHERE 1=1
+                <include refid="adminAnimalFilter"/>
+                <choose>
+                    <when test="sort == 'views'">ORDER BY A.VIEW_COUNT DESC</when>
+                    <otherwise>ORDER BY A.CREATE_DATE DESC</otherwise>
+                </choose>
+            ) T
+            WHERE ROWNUM &lt;= #{endRow}
+        )
+        WHERE RN &gt;= #{startRow}
+    </select>
+    
+    
+    	
+
+
+<!--=============================== SELECT 영역 ===============================   -->
+
+
+<!--=============================== UPDATE 영역 ===============================   -->
+<update id="updateMemberRole" parameterType="map" >
+	UPDATE MEMBER
+	SET ROLE = #{role}
+	WHERE MEMBER_ID =#{memberId}
+</update>
+
+<update id="updateMemberStatus" parameterType="map">
+	UPDATE MEMBER
+	SET STATUS =#{status}
+	WHERE MEMBER_ID =#{memberId}
+</update>
+
+<update id="updateApplyStatus" parameterType="map">
+		UPDATE VOLUNTEER_APPLY
+		SET STATUS = #{status},
+		REJECT_REASON = #{rejectReason, jdbcType=VARCHAR}
+    WHERE VOLUNTEER_ID = #{volunteerId}
+	</update>
+	 <!-- 
+        입양 상태 변경 - AJAX로 호출
+        newStatus는 DB 제약조건과 일치해야 함: '입양가능' / '입양검토중' / '입양완료'
+    -->
+<update id="updateAnimalStatus" parameterType="map">
+	UPDATE ANIMAL
+	SET ADOPTION_STATUS = #{newStatus}
+	WHERE ANIMAL_ID = #{animalId}
+</update>
+
+<!--=============================== UPDATE 영역 ===============================   -->
+
+
+<!--=============================== DELETE 영역 ===============================   -->
+<delete id="deleteMember" parameterType ="String">
+	DELETE FROM MEMBER
+	WHERE MEMBER_ID =#{memberId}
+</delete>
+
+<!-- 
+        동물 삭제
+        FK ON DELETE CASCADE로 ANIMAL_IMAGE, ANIMAL_MEDICAL, ANIMAL_RESCUE 자동 삭제
+    -->
+    <delete id="deleteAnimal" parameterType="int">
+        DELETE FROM ANIMAL
+        WHERE ANIMAL_ID = #{animalId}
+    </delete>
+
+</mapper>

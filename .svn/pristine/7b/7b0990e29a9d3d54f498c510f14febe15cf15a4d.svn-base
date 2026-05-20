@@ -1,0 +1,19 @@
+document.addEventListener("DOMContentLoaded", function () {
+    const currentPath = window.location.pathname;
+
+    const menuLinks = document.querySelectorAll(
+        ".admin-sidebar__link, .admin-mobile-nav a"
+    );
+
+    menuLinks.forEach(link => {
+        const href = link.getAttribute("href");
+        if (!href) return;
+
+        const linkPath = new URL(link.href, window.location.origin).pathname;
+
+        // 🔥 핵심 수정 부분
+        if (currentPath.startsWith(linkPath)) {
+            link.classList.add("is-active");
+        }
+    });
+});

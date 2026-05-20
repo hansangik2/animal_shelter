@@ -1,0 +1,33 @@
+package kr.or.ddit.admin.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public interface IadminService {
+	public Map<String,Object> selectMemberListData(PageVO pageVO);
+	
+	public int selectMemberCount(PageVO pageVO);
+	
+	public MemberVO selectMemberDetail(String memberId);
+	
+	public int updateMemberRole(String memberId, String role);
+	
+	public int updateMemberStatus(String memberId, String status);
+	
+	public int deleteMember(String memberId);
+
+	List<Volunteer_RecruitVO> selectRecruitList();
+
+	Volunteer_RecruitVO selectRecruitDetail(int recruitId);
+
+	List<Volunteer_ApplyVO> selectApplyListByRecruitId(int recruitId);
+
+	int updateApplyStatus(Map<String, Object> param);
+}

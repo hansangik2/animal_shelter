@@ -1,0 +1,72 @@
+package kr.or.ddit.board.controller;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import kr.or.ddit.board.service.BoardService;
+import kr.or.ddit.board.service.BoardServiceImpl;
+import kr.or.ddit.board.vo.BoardVO;
+
+@WebServlet({
+    "/board/list.do",
+    "/board/free.do",
+    "/board/review.do",
+    "/board/adoptReview.do",
+    "/board/volunteerReview.do"
+})
+public class BoardListController extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    
+    // service 객체 가져오기
+    private BoardService boardService = BoardServiceImpl.getInstance();
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		
+		String uri = req.getRequestURI();
+		
+		String boardType = req.getParameter("boardType");
+		String keyword= req.getParameter("keyword");
+		
+		if (uri.endsWith("/free.do")) {
+			boardType= "자유";
+		} else if (uri.endsWith("/review.do")) {
+			boardType= "입양후기";
+		} else if (uri.endsWith("/adoptReview.do")) {
+			boardType= "입양후기";
+		} else if (uri.endsWith("/volunteerReview.do")) {
+			boardType= "자원봉사후기";
+		}
+	
+		
+		// 검색값 담을 Map
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("boardType", boardType);
+		paramMap.put("keyword", keyword);
+		
+		// 서비스 호출해서 목록 가져오기
+		List<BoardVO> boardList = boardService.getBoardList(paramMap);
+		
+		// jsp에서 쓰도록 저장
+		req.setAttribute("boardList", boardList);
+		req.setAttribute("boardType", boardType);
+		req.setAttribute("keyword", keyword);
+		
+		// 목록 페이지로 이동
+		req.getRequestDispatcher("/view/boardList.jsp").forward(req, resp);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		doGet(req, resp);
+	}
+
+	
+}

@@ -1,0 +1,248 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<c:set var="ctp" value="${pageContext.request.contextPath}" />
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동물 목록 관리 - 관리자</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="${ctp}/view/admin/css/common/admin-layout.css">
+    <link rel="stylesheet" href="${ctp}/view/admin/css/animal-list.css">
+</head>
+<body>
+
+    <%-- ✅ 핵심: admin-layout으로 전체 감싸기 --%>
+    <div class="admin-layout">
+
+        <!-- Sidebar -->
+        <jsp:include page="/view/admin/common/admin-sidebar.jsp" />
+
+        <!-- Main Wrap: 헤더 + 콘텐츠를 묶는 래퍼 -->
+        <div class="admin-main-wrap">
+
+            <!-- Header -->
+            <jsp:include page="/view/admin/common/admin-header.jsp" />
+
+            <!-- Main Content -->
+            <main class="admin-main-content">
+                <div class="list-container">
+                    
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <div class="page-header__content">
+                            <span class="page-badge">Database Management</span>
+                            <h1 class="page-title">동물 목록 관리</h1>
+                            <p class="page-description">등록된 모든 동물의 정보를 관리하고 상태를 업데이트하세요</p>
+                        </div>
+                        <div class="page-header__actions">
+                            <button class="btn-primary" onclick="location.href='${ctp}/admin/animal/register.do'">
+                                <span class="material-symbols-outlined">add</span>
+                                새 동물 등록
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar -->
+                    <section class="filter-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">종류별 필터</label>
+                            <div class="filter-buttons">
+                                <button class="filter-btn active" data-type="all">전체</button>
+                                <button class="filter-btn" data-type="dog">강아지</button>
+                                <button class="filter-btn" data-type="cat">고양이</button>
+                            </div>
+                        </div>
+
+                        <div class="filter-divider"></div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">상태별 필터</label>
+                            <div class="filter-buttons">
+                                <button class="status-filter-btn" data-status="available">
+                                    <span class="status-dot status-available"></span>
+                                    입양 가능
+                                </button>
+                                <button class="status-filter-btn" data-status="preparing">
+                                    <span class="status-dot status-preparing"></span>
+                                    입양 준비 중
+                                </button>
+                                <button class="status-filter-btn" data-status="completed">
+                                    <span class="status-dot status-completed"></span>
+                                    입양 완료
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="filter-actions">
+                            <button class="sort-btn" id="sortBtn">
+                                <span class="material-symbols-outlined">sort</span>
+                                <span id="sortText">최신순</span>
+                            </button>
+                            <button class="view-toggle-btn active" id="gridViewBtn">
+                                <span class="material-symbols-outlined">grid_view</span>
+                            </button>
+                            <button class="view-toggle-btn" id="listViewBtn">
+                                <span class="material-symbols-outlined">view_list</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Animal Cards Grid -->
+                    <div class="animal-grid" id="animalGrid">
+                        
+                        <c:forEach var="animal" items="${animalList}">
+                            <div class="animal-card ${animal.adoptionStatus == '입양 완료' ? 'adopted' : ''}" 
+                                 data-type="${animal.animalType}" 
+                                 data-status="${animal.adoptionStatus}">
+                                
+                                <!-- Card Image -->
+                                <div class="card-image">
+                                    <img src="${ctp}/uploads/animals/${animal.mainImage}" 
+                                         alt="${animal.animalName}">
+                                    
+                                    <!-- Status Badge -->
+                                    <div class="status-badge status-${animal.adoptionStatus == '입양 가능' ? 'available' : animal.adoptionStatus == '입양 준비 중' ? 'preparing' : 'completed'}">
+                                        ${animal.adoptionStatus}
+                                    </div>
+
+                                    <!-- Type Tag -->
+                                    <div class="type-tags">
+                                        <span class="type-tag">#${animal.animalType == 'dog' ? 'Dog' : 'Cat'}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Content -->
+                                <div class="card-content">
+                                    <div class="card-header">
+                                        <div class="card-title-group">
+                                            <h3 class="card-title">${animal.animalName}</h3>
+                                            <p class="card-id">${animal.animalId}</p>
+                                        </div>
+                                        <div class="card-info-group">
+                                            <p class="card-breed">${animal.breed}</p>
+                                            <p class="card-age">${animal.age}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-details">
+                                        <div class="detail-item">
+                                            <span class="material-symbols-outlined">calendar_today</span>
+                                            <span>구조일: ${animal.rescueDate}</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="material-symbols-outlined">location_on</span>
+                                            <span>${animal.rescueLocation}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-actions">
+                                        <button class="action-btn btn-edit" onclick="editAnimal('${animal.animalId}')">
+                                            수정
+                                        </button>
+                                        <button class="action-btn btn-status" onclick="changeStatus('${animal.animalId}')">
+                                            상태 변경
+                                        </button>
+                                        <button class="action-btn btn-delete" onclick="deleteAnimal('${animal.animalId}')">
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+
+                        <!-- Add New Card -->
+                        <div class="add-card" onclick="location.href='${ctp}/admin/animal/register.do'">
+                            <div class="add-card__icon">
+                                <span class="material-symbols-outlined">add_circle</span>
+                            </div>
+                            <p class="add-card__title">새로운 동물 친구 등록하기</p>
+                            <p class="add-card__subtitle">구조된 동물의 정보를 추가하세요</p>
+                        </div>
+
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" id="pagination">
+                        <button class="pagination-btn" id="prevPage">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        
+                        <div class="pagination-numbers" id="pageNumbers">
+                            <!-- 동적 생성 -->
+                        </div>
+
+                        <button class="pagination-btn" id="nextPage">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+
+                </div>
+            </main>
+
+        </div><%-- end .admin-main-wrap --%>
+    </div><%-- end .admin-layout --%>
+
+    <!-- FAB Button -->
+    <button class="fab-btn" onclick="showHistory()">
+        <span class="material-symbols-outlined">history</span>
+    </button>
+
+    <!-- Status Change Modal -->
+    <div class="modal" id="statusModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>입양 상태 변경</h3>
+                <button class="modal-close" onclick="closeStatusModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="status-options">
+                    <label class="status-option">
+                        <input type="radio" name="newStatus" value="available">
+                        <span class="status-option-content">
+                            <span class="status-dot status-available"></span>
+                            <span>입양 가능</span>
+                        </span>
+                    </label>
+                    <label class="status-option">
+                        <input type="radio" name="newStatus" value="preparing">
+                        <span class="status-option-content">
+                            <span class="status-dot status-preparing"></span>
+                            <span>입양 준비 중</span>
+                        </span>
+                    </label>
+                    <label class="status-option">
+                        <input type="radio" name="newStatus" value="completed">
+                        <span class="status-option-content">
+                            <span class="status-dot status-completed"></span>
+                            <span>입양 완료</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeStatusModal()">취소</button>
+                <button class="btn-primary" onclick="confirmStatusChange()">변경하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctp = '${ctp}';
+    </script>
+    <script src="${ctp}/view/admin/js/animal-list.js"></script>
+</body>
+</html>

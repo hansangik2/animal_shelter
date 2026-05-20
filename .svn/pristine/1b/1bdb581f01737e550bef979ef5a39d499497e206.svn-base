@@ -1,0 +1,92 @@
+package kr.or.ddit.admin.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.animal.vo.AnimalMedicalVO;
+import kr.or.ddit.animal.vo.AnimalRescueVO;
+import kr.or.ddit.animal.vo.AnimalVO;
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public interface IadminDao {
+	public List<MemberVO> selectMemberList(SqlSession session, PageVO pageVO);
+	
+	public int selectMemberCount(SqlSession session, PageVO pageVO);
+	
+	public int selectTodayJoinCount(SqlSession session);
+	
+	public MemberVO selectMemberDetail(SqlSession session, String memberId);
+	
+	int updateMemberRole(SqlSession session, Map<String, String> param);
+	
+	int updateMemberStatus(SqlSession session, Map<String, String> param);
+	
+	int deleteMember(SqlSession session, String memberId);
+	
+	List<Volunteer_RecruitVO> selectRecruitList(SqlSession session);
+	
+	Volunteer_RecruitVO selectRecruitDetail(SqlSession session, int recruitId);
+	
+	List<Volunteer_ApplyVO> selectApplyListByRecruitId(SqlSession session, int recruitId);
+	
+	int updateApplyStatus(SqlSession session, Map<String, Object> param);
+	/**
+	 * 관리자 동물 목록 조회
+	 * - PageVO에 담긴 필터(animalType, adoptionStatus)와 페이징(startRow, endRow) 조건으로 조회
+	 * - admin.xml의 selectAdminAnimalList 호출
+	 */
+	List<AnimalVO> selectAdminAnimalList(SqlSession session, PageVO pageVO);
+	/**
+	 * 관리자 동물 목록 전체 건수
+	 * - 필터 조건 반영한 건수 → 컨트롤러에서 totalPage 계산에 사용
+	 * - admin.xml의 selectAdminAnimalCount 호출
+	 */
+	int selectAdminAnimalCount(SqlSession session,PageVO pageVO);
+	
+	/**
+	 * 동물 입양 상태 변경
+	 * - map에 animalId(int)와 newStatus(String) 담아서 전달
+	 * - admin.xml의 updateAnimalStatus 호출
+	 */
+	int updateAnimalStatus(SqlSession session,Map<String,Object> param);
+	
+	/**
+	 * 동물 삭제
+	 * - ANIMAL 삭제 시 CASCADE로 하위 테이블 자동 삭제
+	 * - admin.xml의 deleteAnimal 호출
+	 */
+	int deleteAnimal(SqlSession session, int animalId);
+	
+	/**
+	 * 동물 기본정보 수정
+	 * - AnimalVO에 animalId 포함해서 전달
+	 */
+	int updateAnimal(SqlSession session, AnimalVO animal);
+
+	/**
+	 * 동물 의료정보 수정
+	 * - AnimalMedicalVO에 animalId 포함해서 전달
+	 */
+	int updateAnimalMedical(SqlSession session, AnimalMedicalVO medical);
+
+	/**
+	 * 동물 구조정보 수정
+	 * - AnimalRescueVO에 animalId 포함해서 전달
+	 */
+	int updateAnimalRescue(SqlSession session, AnimalRescueVO rescue);
+
+	/**
+	 * 동물 이미지 전체 삭제
+	 * - 수정 시 기존 이미지 전부 삭제 후 새로 INSERT하는 전략
+	 * - animalId에 해당하는 ANIMAL_IMAGE 행 전체 삭제
+	 */
+	int deleteAnimalImages(SqlSession session, int animalId);
+	
+	
+	
+}

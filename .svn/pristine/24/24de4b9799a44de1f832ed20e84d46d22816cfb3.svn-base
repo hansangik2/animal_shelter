@@ -1,0 +1,66 @@
+package kr.or.ddit.board.controller;
+
+import java.io.IOException;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import kr.or.ddit.board.service.BoardService;
+import kr.or.ddit.board.service.BoardServiceImpl;
+import kr.or.ddit.board.vo.BoardCommentVO;
+
+@WebServlet({"/board/comment.do",
+	         "/board/commentDelete.do"
+            })
+public class BoardCommentController extends HttpServlet{
+    private static final long serialVersionUID = 1L;
+    
+    private BoardService boardService = BoardServiceImpl.getInstance();
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+
+        String uri = req.getRequestURI();
+
+        // 댓글 삭제
+        if (uri.endsWith("/commentDelete.do")) {
+            int commentId = Integer.parseInt(req.getParameter("commentId"));
+            int boardId = Integer.parseInt(req.getParameter("boardId"));
+
+            boardService.deleteComment(commentId);
+
+            resp.sendRedirect(req.getContextPath() + "/board/detail.do?boardId=" + boardId);
+            return;
+        }
+
+        // 댓글 등록
+        int boardId = Integer.parseInt(req.getParameter("boardId"));
+        String memberId = req.getParameter("memberId");
+        String content = req.getParameter("content");
+        
+        // 정지회원 댓글작성 제한
+        String status = boardService.getMemberStatus(memberId);
+        
+        if(!"Y".equals(status)) {
+        	resp.sendRedirect(req.getContextPath() + "board/detail.do?boardId=" + boardId);
+            return;
+        }
+
+        if (content == null || content.trim().equals("")) {
+            resp.sendRedirect(req.getContextPath() + "/board/detail.do?boardId=" + boardId);
+            return;
+        }
+
+        BoardCommentVO commentVo = new BoardCommentVO();
+        commentVo.setBoardId(boardId);
+        commentVo.setMemberId(memberId);
+        commentVo.setContent(content);
+
+        boardService.registComment(commentVo);
+
+        resp.sendRedirect(req.getContextPath() + "/board/detail.do?boardId=" + boardId);
+    }
+}

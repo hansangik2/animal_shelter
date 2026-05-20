@@ -1,0 +1,15 @@
+package kr.or.ddit.donation.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.donation.vo.DonationVO;
+
+public interface IDonationDao {
+	 int insertDonation(SqlSession session, DonationVO dvo);
+	 public List<DonationVO> selectMyDonationList(SqlSession session, String memberId);
+	 public DonationVO selectDonationForReceipt(SqlSession session, int donationId, String memberId);
+
+
+}

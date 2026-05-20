@@ -1,0 +1,153 @@
+package kr.or.ddit.donation.controller;
+
+
+import java.io.IOException;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.*;
+import com.itextpdf.text.pdf.draw.LineSeparator;
+
+import kr.or.ddit.donation.service.DonationServiceImpl;
+import kr.or.ddit.donation.service.IDonationService;
+import kr.or.ddit.donation.vo.AESUtil;
+import kr.or.ddit.donation.vo.DonationVO;
+import kr.or.ddit.member.vo.MemberVO;
+
+@WebServlet("/donation/receipt.do")
+public class DonationReceiptDownload extends HttpServlet{
+	
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	        // ── 1. 인증 확인 ──
+	        HttpSession session = req.getSession();
+	        MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+	        if (loginUser == null) {
+	            resp.sendRedirect(req.getContextPath() + "/login.do");
+	            return;
+	        }
+
+	        // ── 2. 파라미터 ──
+	        int donationId;
+	        try {
+	            donationId = Integer.parseInt(req.getParameter("donationId"));
+	        } catch (NumberFormatException e) {
+	            resp.sendError(400, "잘못된 요청입니다.");
+	            return;
+	        }
+
+	        // ── 3. DB 조회 (본인 영수증만) ──
+	        IDonationService service = DonationServiceImpl.getInstance();
+	        DonationVO dvo = service.selectDonationForReceipt(donationId, loginUser.getMemberId());
+
+	        if (dvo == null) {
+	            resp.sendError(403, "영수증 정보가 없거나 접근 권한이 없습니다.");
+	            return;
+	        }
+
+	        // ── 4. PDF 생성 ──
+	        resp.setContentType("application/pdf");
+	        resp.setHeader("Content-Disposition",
+	            "attachment; filename=\"donation_receipt_" + donationId + ".pdf\"");
+
+	        try {
+	            // 한글 폰트 (서버에 폰트 파일 필요 — 없으면 기본 폰트 사용)
+	            BaseFont bf;
+	            try {
+	                bf = BaseFont.createFont(
+	                    getServletContext().getRealPath("/fonts/MALGUN.TTF"),
+	                    BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+	            } catch (Exception ex) {
+	                bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, false);
+	            }
+
+	            Font titleFont   = new Font(bf, 20, Font.BOLD);
+	            Font headerFont  = new Font(bf, 12, Font.BOLD);
+	            Font normalFont  = new Font(bf, 11, Font.NORMAL);
+	            Font smallFont   = new Font(bf, 9,  Font.NORMAL, BaseColor.GRAY);
+
+	            Document doc = new Document(PageSize.A4, 60, 60, 80, 60);
+	            PdfWriter.getInstance(doc, resp.getOutputStream());
+	            doc.open();
+
+	            // 제목
+	            Paragraph title = new Paragraph("기부금 영수증\nDonation Receipt", titleFont);
+	            title.setAlignment(Element.ALIGN_CENTER);
+	            title.setSpacingAfter(20);
+	            doc.add(title);
+
+	            // 구분선
+	            LineSeparator line = new LineSeparator();
+	            line.setLineColor(new BaseColor(243, 115, 33));
+	            doc.add(new Chunk(line));
+
+	            // 내용 테이블
+	            PdfPTable table = new PdfPTable(2);
+	            table.setWidthPercentage(100);
+	            table.setSpacingBefore(20);
+	            table.setWidths(new float[]{35f, 65f});
+
+	            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy년 MM월 dd일");
+	            String dateStr = dvo.getCreateDate() != null ? sdf.format(dvo.getCreateDate()) : "-";
+	            
+	         // [디버깅용] DB에서 가져온 데이터가 정상적인지 확인
+	            System.out.println("=== PDF 영수증 데이터 확인 ===");
+	            System.out.println("기부자명: " + dvo.getDonatorName());
+	            System.out.println("기부금액: " + dvo.getDonationAmount());
+	            System.out.println("결제수단: " + dvo.getDonationMethod());
+
+	            addRow(table, "영수증 번호",      String.valueOf(dvo.getDonationId()), bf);
+	            addRow(table, "기부자 성명",       dvo.getDonatorName(), bf);
+	            
+	            String decryptedReg = AESUtil.decrypt(dvo.getRegNo1()) + "-*******";
+	            addRow(table, "주민등록번호", decryptedReg, bf);
+	            addRow(table, "기부 금액",
+	                String.format("%,d원", dvo.getDonationAmount()), bf);
+	            addRow(table, "기부 유형",         dvo.getDonationType(), bf);
+	            addRow(table, "기부일",            dateStr, bf);
+	            addRow(table, "단체명",            "너와 나의 연결고리 동물보호소", bf);
+	            addRow(table, "사업자등록번호",    "123-45-67890", bf);
+	            
+	            doc.add(table);
+	            
+	            // 하단 안내
+	            Paragraph notice = new Paragraph(
+	                "\n본 영수증은 소득세법 제34조에 따른 기부금 영수증입니다.\n" +
+	                "너와 나의 연결고리 동물보호소 | Tel: 02-1234-5678", smallFont);
+	            notice.setAlignment(Element.ALIGN_CENTER);
+	            notice.setSpacingBefore(30);
+	            doc.add(notice);
+
+	            doc.close();
+
+	        } catch (Exception ex) {
+	            ex.printStackTrace();
+	            resp.sendError(500, "PDF 생성 중 오류가 발생했습니다.");
+	        }
+	    }
+
+	    private void addRow(PdfPTable table, String label, String value, BaseFont bf) {
+	        Font labelFont = new Font(bf, 10, Font.BOLD, new BaseColor(100, 100, 100));
+	        Font valueFont = new Font(bf, 11, Font.NORMAL);
+
+	        PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
+	        labelCell.setBackgroundColor(new BaseColor(255, 244, 229));
+	        labelCell.setPadding(10);
+	        labelCell.setBorderColor(new BaseColor(220, 220, 220));
+
+	        PdfPCell valueCell = new PdfPCell(new Phrase(value != null ? value : "-", valueFont));
+	        valueCell.setPadding(10);
+	        valueCell.setBorderColor(new BaseColor(220, 220, 220));
+
+	        table.addCell(labelCell);
+	        table.addCell(valueCell);
+
+	}
+
+}

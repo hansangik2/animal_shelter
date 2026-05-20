@@ -1,0 +1,151 @@
+@charset "UTF-8";
+
+.board-page {
+    width: 100%;
+    background-color: #f8f7f4;
+    padding: 70px 0 100px;
+    min-height: 700px;
+}
+
+.board-inner {
+    width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #111;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.page-sub {
+    font-size: 22px;
+    color: #8b8f97;
+    text-align: center;
+    line-height: 1.7;
+    margin-bottom: 50px;
+}
+
+.board-search-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.category-wrap {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    background-color: #fff;
+    color: #666;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.category-btn:hover {
+    background-color: #f39a2d;
+    color: #fff;
+    border-color: #f39a2d;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-box input[type="text"] {
+    width: 280px;
+    height: 46px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 15px;
+    outline: none;
+    background-color: #fff;
+}
+
+.search-box button {
+    height: 46px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 12px;
+    background-color: #f39a2d;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-top: 2px solid #f39a2d;
+}
+
+.board-table thead tr {
+    background-color: #fff;
+}
+
+.board-table th {
+    padding: 18px 10px;
+    font-size: 16px;
+    color: #444;
+    border-bottom: 1px solid #e5e5e5;
+    text-align: center;
+}
+
+.board-table td {
+    padding: 20px 10px;
+    font-size: 15px;
+    color: #444;
+    border-bottom: 1px solid #efefef;
+    text-align: center;
+}
+
+.board-table .title-cell {
+    text-align: left;
+    padding-left: 20px;
+}
+
+.board-table .title-cell a {
+    color: #222;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.board-table .title-cell a:hover {
+    color: #f39a2d;
+}
+
+.btn-area {
+    margin-top: 35px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.write-btn {
+    display: inline-block;
+    min-width: 140px;
+    height: 52px;
+    line-height: 52px;
+    text-align: center;
+    background-color: #f39a2d;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 30px;
+    font-size: 17px;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(243, 154, 45, 0.25);
+}

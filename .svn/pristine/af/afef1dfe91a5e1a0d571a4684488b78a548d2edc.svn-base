@@ -1,0 +1,66 @@
+package kr.or.ddit.donation.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.donation.dao.DonationDaoImpl;
+import kr.or.ddit.donation.dao.IDonationDao;
+import kr.or.ddit.donation.vo.DonationVO;
+import kr.or.ddit.util.MybatisUtil;
+
+public class DonationServiceImpl implements IDonationService{
+	
+	private static IDonationService donationService = new DonationServiceImpl();
+	private IDonationDao donationDao;
+	private DonationServiceImpl() {
+		donationDao = DonationDaoImpl.getInstance();
+	}
+
+	public static IDonationService getInstance() {
+		return donationService;
+		
+	}
+	
+	@Override
+	public int insertDonation(DonationVO donationVO) {
+		 int cnt = 0;
+        try (SqlSession session = MybatisUtil.getsqlsession(false)) {
+            cnt = donationDao.insertDonation(session, donationVO);
+            if (cnt > 0) session.commit();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            cnt = 0;
+        }
+        return cnt;
+
+	}
+
+	@Override
+	public List<DonationVO> selectMyDonationList(String memberId) {
+		List<DonationVO> list = new ArrayList<>();
+        try (SqlSession session = MybatisUtil.getsqlsession()) {
+            list = donationDao.selectMyDonationList(session, memberId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return list;
+
+	}
+
+	@Override
+	public DonationVO selectDonationForReceipt(int donationId, String memberId) {
+		DonationVO dvo = null;
+        try (SqlSession session = MybatisUtil.getsqlsession()) {
+            dvo = donationDao.selectDonationForReceipt(session, donationId, memberId);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return dvo;
+
+	}
+
+	
+
+}

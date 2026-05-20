@@ -1,0 +1,136 @@
+package kr.or.ddit.mypage.dao;
+
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.mypage.vo.ActivityVO;
+import kr.or.ddit.mypage.vo.MypageStatsVO;
+import kr.or.ddit.util.MybatisUtil;
+
+import org.apache.ibatis.session.SqlSession;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 마이페이지 DAO 구현체 (싱글톤) - MyBatis SqlSession 사용 - namespace: kr.or.ddit.mypage
+ * (mypage.xml 과 일치)
+ */
+public class MypageDAOImpl implements IMypageDAO
+{
+
+	// ── 싱글톤 ──────────────────────────────────────
+	private static MypageDAOImpl instance;
+
+	private MypageDAOImpl()
+	{
+	}
+
+	public static MypageDAOImpl getInstance()
+	{
+		if (instance == null)
+		{
+			instance = new MypageDAOImpl();
+		}
+		return instance;
+	}
+	// ─────────────────────────────────────────────────
+
+	/** mypage.xml namespace */
+	private static final String NS = "mypage.";
+
+	/**
+     * 마이페이지 통계 카드 데이터 조회
+     * (관심동물 수 / 입양신청 수 / 작성글 수)
+     *
+     * @param memberId 로그인한 회원 ID
+     * @return MypageStatsVO
+     */
+	@Override
+	public MypageStatsVO getMypageStats(String memberId)
+	{
+		try (SqlSession session = MybatisUtil.getsqlsession())
+		{
+			return session.selectOne(NS + "getMypageStats", memberId);
+		}
+	}
+
+	/**
+     * 최근 활동 내역 조회 (최근 5건)
+     *
+     * @param memberId 로그인한 회원 ID
+     * @return List<ActivityVO>
+     */
+	@Override
+	public List<ActivityVO> getRecentActivities(String memberId)
+	{
+		try (SqlSession session = MybatisUtil.getsqlsession())
+		{
+			return session.selectList(NS + "getRecentActivities", memberId);
+		}
+	}
+
+	/**
+	 * 회원 정보 수정
+	 * 
+	 * @return 수정된 행 수
+	 */
+	@Override
+	public int updateMember(MemberVO updateVO)
+	{
+		try (SqlSession session = MybatisUtil.getsqlsession())
+		{
+			int result = session.update(NS + "updateMember", updateVO);
+			session.commit();
+
+			return result;
+		}
+	}
+
+	/**
+	 * 현재 비밀번호 일치 여부 확인
+	 * 
+	 * @return true: 일치, false: 불일치
+	 */
+	@Override
+	public boolean checkCurrentPw(String memberId, String currentPw)
+	{
+		try (SqlSession session = MybatisUtil.getsqlsession())
+		{
+			Map<String, String> paramMap = new HashMap<>();
+			paramMap.put("memberId", memberId);
+			paramMap.put("currentPw", currentPw);
+			int count = session.selectOne(NS + "checkCurrentPw", paramMap);
+			return count > 0;
+		}
+	}
+
+	/**
+	 * 닉네임 중복 카운트
+	 * 
+	 * @return 0이면 사용 가능
+	 */
+	@Override
+	public int countByNickname(String nickname)
+	{
+		try (SqlSession session = MybatisUtil.getsqlsession())
+		{
+			return session.selectOne(NS + "countByNickname", nickname);
+		}
+	}
+
+	/**
+     * 회원 탈퇴 (소프트 삭제 - STATUS = 'N')
+     *
+     * @return 수정된 행 수
+     */
+	@Override
+	public int withdrawMember(String memberId)
+	{
+		try (SqlSession session = MybatisUtil.getsqlsession())
+		{
+			int result = session.update(NS + "withdrawMember", memberId);
+			session.commit();
+			return result;
+		}
+	}
+}

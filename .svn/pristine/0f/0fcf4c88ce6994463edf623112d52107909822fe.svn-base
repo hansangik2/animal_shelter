@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    [실제 DONATION 테이블 컬럼]
+    1  DONATION_ID      NUMBER
+    2  MEMBER_ID        VARCHAR2(50)
+    3  DONATION_AMOUNT  NUMBER
+    4  DONATION_DATE    DATE           DEFAULT SYSDATE
+    5  DONATION_METHOD  VARCHAR2(20)   (계좌이체 / 카드결제)
+    6  PAYMENT_TYPE     VARCHAR2(20)   (정기 / 일시)
+    8  DONATOR_NAME     VARCHAR2(100)
+    9  DONATOR_TEL      VARCHAR2(20)
+    10 DONATOR_EMAIL    VARCHAR2(100)
+    11 RECEIPT_YN       CHAR(1)        DEFAULT 'N'
+    12 REG_NO1          VARCHAR2(10)
+    13 REG_NO2          VARCHAR2(100)
+-->
+
+<mapper namespace="donation">
+
+    <!-- ===== 후원 등록 ===== -->
+    <insert id="insertDonation" parameterType="DonationVO">
+        <selectKey keyProperty="donationId" resultType="int" order="BEFORE">
+            SELECT SEQ_DONATION.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO DONATION (
+            DONATION_ID,
+            MEMBER_ID,
+            DONATION_AMOUNT,
+            DONATION_DATE,
+            DONATION_METHOD,
+            PAYMENT_TYPE,
+            DONATOR_NAME,
+            DONATOR_TEL,
+            DONATOR_EMAIL,
+            RECEIPT_YN,
+            REG_NO1,
+            REG_NO2
+        ) VALUES (
+            #{donationId},
+            #{memberId,       jdbcType=VARCHAR},
+            #{donationAmount},
+            SYSDATE,
+            #{donationMethod},
+            #{donationType},
+            #{donatorName,    jdbcType=VARCHAR},
+            #{donatorTel,     jdbcType=VARCHAR},
+            #{donatorEmail,   jdbcType=VARCHAR},
+            #{receiptYn,      jdbcType=VARCHAR},
+            #{regNo1,         jdbcType=VARCHAR},
+            #{regNo2,         jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <!-- ===== 내 후원 목록 (마이페이지용) ===== -->
+    <select id="selectMyDonationList" parameterType="String" resultType="DonationVO">
+        SELECT
+            DONATION_ID     AS donationId,
+            MEMBER_ID       AS memberId,
+            DONATION_AMOUNT AS donationAmount,
+            DONATION_DATE   AS createDate,
+            DONATION_METHOD AS donationMethod,
+            PAYMENT_TYPE    AS donationType,
+            DONATOR_NAME    AS donatorName,
+            RECEIPT_YN      AS receiptYn
+        FROM DONATION
+        WHERE MEMBER_ID = #{memberId}
+        ORDER BY DONATION_DATE DESC
+    </select>
+
+    <!-- ===== 영수증 단건 조회 (PDF 다운로드용) ===== -->
+    <select id="selectDonationForReceipt" resultType="DonationVO">
+        SELECT
+            DONATION_ID     AS donationId,
+            MEMBER_ID       AS memberId,
+            DONATION_AMOUNT AS donationAmount,
+            DONATION_DATE   AS createDate,
+            PAYMENT_TYPE    AS donationType,
+            DONATOR_NAME    AS donatorName,
+            DONATOR_TEL     AS donatorTel,
+            DONATOR_EMAIL   AS donatorEmail,
+            RECEIPT_YN      AS receiptYn,
+            REG_NO1         AS regNo1
+        FROM DONATION
+        WHERE DONATION_ID = #{donationId}
+          AND MEMBER_ID   = #{memberId}
+          AND RECEIPT_YN  = 'Y'
+    </select>
+
+    <!-- ===== 관리자 전체 목록 ===== -->
+    <select id="selectAllDonationList" resultType="DonationVO">
+        SELECT
+            DONATION_ID     AS donationId,
+            MEMBER_ID       AS memberId,
+            DONATION_AMOUNT AS donationAmount,
+            DONATION_DATE   AS createDate,
+            DONATION_METHOD AS donationMethod,
+            PAYMENT_TYPE    AS donationType,
+            DONATOR_NAME    AS donatorName,
+            RECEIPT_YN      AS receiptYn
+        FROM DONATION
+        ORDER BY DONATION_DATE DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,140 @@
+package kr.or.ddit.admin.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.animal.vo.AnimalMedicalVO;
+import kr.or.ddit.animal.vo.AnimalRescueVO;
+import kr.or.ddit.animal.vo.AnimalVO;
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public class AdminDaoImpl implements IadminDao {
+	private static IadminDao dao= new AdminDaoImpl();
+	
+	
+	
+	private AdminDaoImpl() {}
+	
+	public static IadminDao getinsetance() {
+		return dao;
+	}
+
+
+	@Override
+	public int selectTodayJoinCount(SqlSession session) {
+		return session.selectOne("admin.selectTodayJoinCount");
+	}
+
+	@Override
+	public List<MemberVO> selectMemberList(SqlSession session, PageVO pageVO) {
+		
+		return session.selectList("admin.selectMemberList", pageVO);
+	}
+
+	@Override
+	public int selectMemberCount(SqlSession session, PageVO pageVO) {
+		
+		return session.selectOne("admin.selectMemberCount",pageVO);
+	}
+
+	@Override
+	public MemberVO selectMemberDetail(SqlSession session, String memberId) {
+		
+		return session.selectOne("admin.selectMemberDetail",memberId);
+	}
+
+	@Override
+	public int updateMemberRole(SqlSession session, Map<String, String> param) {
+			
+		return session.update("admin.updateMemberRole",param);
+	}
+
+	@Override
+	public int updateMemberStatus(SqlSession session, Map<String, String> param) {
+		
+		return session.update("admin.updateMemberStatus",param);
+	}
+
+	@Override
+	public int deleteMember(SqlSession session, String memberId) {
+		
+		return session.delete("admin.deleteMember",memberId);
+	}
+
+	@Override
+	public List<Volunteer_RecruitVO> selectRecruitList(SqlSession session) {
+		
+		return session.selectList("admin.selectRecruitList");
+	}
+
+	@Override
+	public Volunteer_RecruitVO selectRecruitDetail(SqlSession session, int recruitId) {
+		
+		return session.selectOne("admin.selectRecruitDetail", recruitId);
+	}
+
+	@Override
+	public List<Volunteer_ApplyVO> selectApplyListByRecruitId(SqlSession session, int recruitId) {
+	
+		return session.selectList("admin.selectApplyListByRecruitId", recruitId);
+	}
+
+	@Override
+	public int updateApplyStatus(SqlSession session, Map<String, Object> param) {
+	
+		return session.update("admin.updateApplyStatus", param);
+	}
+
+	@Override
+	public List<AnimalVO> selectAdminAnimalList(SqlSession session, PageVO pageVO) {
+	    // PageVO 통째로 넘기면 xml에서 #{animalType}, #{adoptionStatus}, #{startRow}, #{endRow} 등 꺼내씀
+		return session.selectList("admin.selectAdminAnimalList", pageVO);
+	}
+
+	@Override
+	public int selectAdminAnimalCount(SqlSession session, PageVO pageVO) {
+		// 필터 조건 반영된 전체 건수 반환
+		return session.selectOne("admin.selectAdminAnimalCount", pageVO);
+	}
+
+	@Override
+	public int updateAnimalStatus(SqlSession session, Map<String, Object> param) {
+		// param에 animalId, newStatus 담겨있음 → xml의 #{animalId}, #{newStatus}로 매핑
+		return session.update("admin.updateAnimalStatus", param);
+	}
+
+	@Override
+	public int deleteAnimal(SqlSession session, int animalId) {
+		
+		return session.delete("admin.deleteAnimal",animalId);
+	}
+
+	@Override
+	public int updateAnimal(SqlSession session, AnimalVO animal) {
+		
+		return session.update("animal.updateAnimal",animal);
+	}
+
+	@Override
+	public int updateAnimalMedical(SqlSession session, AnimalMedicalVO medical) {
+		
+		return session.update("animal.updateAnimalMedical", medical);
+	}
+
+	@Override
+	public int updateAnimalRescue(SqlSession session, AnimalRescueVO rescue) {
+		return session.update("animal.updateAnimalRescue", rescue);
+	}
+
+	@Override
+	public int deleteAnimalImages(SqlSession session, int animalId) {
+		
+		return session.delete("animal.deleteAnimalImages", animalId);
+	}
+
+}

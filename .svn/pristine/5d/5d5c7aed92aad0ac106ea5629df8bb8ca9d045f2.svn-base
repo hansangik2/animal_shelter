@@ -1,0 +1,12 @@
+package kr.or.ddit.report.service;
+
+import kr.or.ddit.report.vo.AnimalReportVO;
+import kr.or.ddit.report.vo.MemberReportVO;
+
+public interface IReportService {
+	
+	public int insertAnimalReport(AnimalReportVO vo);
+	
+	public int insertMemberRepor(MemberReportVO vo);
+
+}

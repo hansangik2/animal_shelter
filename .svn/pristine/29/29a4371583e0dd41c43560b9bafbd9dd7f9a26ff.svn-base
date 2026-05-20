@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="animal">
+	<!-- 컬럼 매핑 -->
+	<resultMap type="AnimalVO" id="animalMap">
+        <id column="ANIMAL_ID" property="animalId"/>
+        <result column="ANIMAL_NAME" property="animalName"/>
+        <result column="ANIMAL_TYPE" property="animalType"/>
+        <result column="BREED" property="breed"/>
+        <result column="GENDER" property="gender"/>
+        <result column="AGE" property="age"/>
+        <result column="WEIGHT" property="weight"/>
+        <result column="ADOPTION_STATUS" property="adoptionStatus"/>
+        <result column="PERSONALITY" property="personality"/>
+        <result column="VIEW_COUNT" property="viewCount"/>
+        <result column="CREATE_DATE" property="createDate"/>
+        <result column="mainImage" property="mainImage"/>
+        <result column="isFavorite" property="isFavorite"/>
+    </resultMap>
+
+	<!-- 필터 처리 -->
+    <sql id="animalFilter">
+        <if test="keyword != null and keyword != ''">
+             AND A.ANIMAL_NAME LIKE '%' || #{keyword} || '%'
+        </if>
+    
+    	<!-- 필터를 위한 동적쿼리 -->
+    	<!-- 타입 -->
+        <if test="animalType != null and animalType != ''"> 
+            AND A.ANIMAL_TYPE = #{animalType} 
+        </if>
+        
+        <!-- 성별 -->
+        <if test="gender != null and gender != ''"> 
+            AND A.GENDER = #{gender} 
+        </if>
+        
+        <!-- 성격 -->
+        <if test="personalityList != null and personalityList.size != 0">
+            AND (
+            <foreach collection="personalityList" item="p" separator="OR">
+                A.PERSONALITY LIKE '%' || #{p} || '%'
+            </foreach>
+            )
+        </if>
+        
+        <!-- 무게(크기) -->
+        <if test="sizeList != null and sizeList.size != 0">
+            AND (
+            <foreach collection="sizeList" item="s" separator="OR">
+                <choose>
+                    <when test="s == 'SMALL'"> A.WEIGHT &lt; 10 </when>
+                    <when test="s == 'MEDIUM'"> A.WEIGHT >= 10 AND A.WEIGHT &lt; 25 </when>
+                    <when test="s == 'LARGE'"> A.WEIGHT >= 25 </when>
+                </choose>
+            </foreach>
+            )
+        </if>
+    </sql>
+
+	<!-- 필터링 후 개수 조회 -->
+	<select id="getAnimalCount" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM ANIMAL A
+        WHERE 1=1 <!-- 필터 조건들이 모두 AND로 시작하기 때문에, 첫 번째 조건이 없을 경우 발생하는 오류 방지 -->
+        <!-- 필터링 참조 -->
+        <include refid="animalFilter" />
+    </select>
+
+	<!-- 필터링 후 데이터 조회 -->
+    <select id="getAnimalList" resultMap="animalMap" parameterType="map">
+    	<!-- 3) 최종 페이징 처리 - 계산된 행 번호를 기준으로 필요한 범위만큼만 추출 -->
+        SELECT * FROM 
+        (
+        	<!-- 2) 정렬 및 행 번호(ROWNUM) 부여 -->
+            SELECT ROWNUM AS RNUM, T.* FROM 
+            (
+            	<!-- 1) 원본 데이터 추출 및 가공 (Base Query) -->
+                SELECT 	A.ANIMAL_ID,
+                		A.ANIMAL_NAME,
+                		A.ANIMAL_TYPE,
+                		A.BREED,
+                		A.GENDER,
+                		A.AGE,
+                		A.WEIGHT,
+                		A.ADOPTION_STATUS,
+                		A.PERSONALITY,
+                		A.VIEW_COUNT,
+                		A.CREATE_DATE, 
+                		I.SAVE_FILE_NAME AS mainImage,
+	                	(
+		                	SELECT COUNT(*) FROM FAVORITE_ANIMAL F 
+		                    WHERE F.ANIMAL_ID = A.ANIMAL_ID 
+		                    AND F.MEMBER_ID = #{loginMemberId, jdbcType=VARCHAR}
+	                    ) AS isFavorite
+                FROM ANIMAL A
+                <!-- 외부 조인: 이미지가 등록되지 않은 동물도 목록에 나오도록 처리 -->
+                LEFT OUTER JOIN ANIMAL_IMAGE I ON A.ANIMAL_ID = I.ANIMAL_ID
+                <!-- 필터 조건: 메인 이미지이거나, 이미지가 아예 없는 경우만 조회 -->
+                WHERE (I.IS_MAIN = 'Y' OR I.IS_MAIN IS NULL)
+                
+                <!-- 동적 SQL(필터참조): 외부(animalFilter)에서 정의된 검색 조건(종류, 성별 등) 삽입 -->
+                <include refid="animalFilter" />
+
+				<!-- 동적 정렬: 파라미터(sort) 값에 따라 조회수순 또는 최신순으로 정렬 -->
+                ORDER BY 
+                <choose>
+                    <when test="sort == 'views'"> A.VIEW_COUNT DESC </when>
+                    <otherwise> A.CREATE_DATE DESC </otherwise>
+                </choose>
+            ) T <!-- 1단계 결과를 T라는 별칭의 임시 테이블로 간주 -->
+        ) WHERE RNUM BETWEEN #{start} AND #{end} <!-- 사용자가 요청한 페이지의 시작/끝 번호 필터링 -->
+    </select>
+    
+    <select id="checkFavorite" parameterType="map" resultType="int">
+        SELECT COUNT(*) 
+        FROM FAVORITE_ANIMAL 
+        WHERE ANIMAL_ID = #{animalId} AND MEMBER_ID = #{memberId}
+    </select>
+
+    <insert id="insertFavorite" parameterType="map">
+        INSERT INTO FAVORITE_ANIMAL (ANIMAL_ID, MEMBER_ID, CREATE_DATE)
+        VALUES (#{animalId}, #{memberId}, SYSDATE)
+    </insert>
+
+    <delete id="deleteFavorite" parameterType="map">
+        DELETE FROM FAVORITE_ANIMAL 
+        WHERE ANIMAL_ID = #{animalId} AND MEMBER_ID = #{memberId}
+    </delete>
+    
+    <!--동물 상세조회 mapper  -->
+    
+    <!--조회수...  -->
+    <update id="incrementViewCount" parameterType="int">
+    	UPDATE ANIMAL
+    	SET VIEW_COUNT =NVL(VIEW_COUNT,0) +1
+    	WHERE ANIMAL_ID =#{animalId}
+    </update>
+    
+    <!--동물정보 가져오기  -->
+    <select id="selectAnimal" parameterType="int" resultType="AnimalVO">
+    SELECT	ANIMAL_ID as animalId,
+           ANIMAL_NAME as animalName,
+           ANIMAL_TYPE as animalType,
+           BREED,
+           GENDER,
+           AGE,
+           WEIGHT,
+           ADOPTION_STATUS as adoptionStatus,
+           PERSONALITY as personality,
+           VIEW_COUNT as viewCount,
+           CREATE_DATE as createDate
+        FROM ANIMAL
+        WHERE ANIMAL_ID =#{animalId}
+    </select>
+   <!--동물 이미지 가져오기 ...  --> 
+    <select id="selectImagesByAnimalId" parameterType="int" resultType="AnimalImageVO">
+    SELECT IMAGE_ID as imageId,
+    	ANIMAL_ID as animalId,
+		IS_MAIN as isMain,
+		ORIGIN_FILE_NAME as originFileName,
+		SAVE_FILE_NAME as saveFileName
+	FROM ANIMAL_IMAGE
+	WHERE ANIMAL_ID =#{animalId}
+	ORDER BY CASE WHEN IS_MAIN = 'Y' THEN 0 ELSE 1 END, IMAGE_ID
+    </select>
+   <!--동물 건강상태  -->
+    <select id="selectMedical" parameterType="int" resultType="AnimalMedicalVO">
+    SELECT ANIMAL_ID as animalId,
+    	VACCINATION as vaccination,
+        MICROCHIP as microchip,
+        NEUTERED as neutered
+    FROM ANIMAL_MEDICAL
+    WHERE ANIMAL_ID = #{animalId}
+    </select>
+    
+    <!--동물 구조정보  -->
+    <select id="selectRescue" parameterType="int" resultType="AnimalRescueVO">
+    SELECT ANIMAL_ID as animalId,
+     	RESCUE_DATE as rescueDate,
+        STORY as story
+    FROM ANIMAL_RESCUE
+    WHERE ANIMAL_ID =#{animalId}
+    </select>
+    
+    <!--찜 표시  -->
+    <select id="checkFavorite_detail" parameterType="map" resultType="int">
+    SELECT COUNT(*) FROM FAVORITE_ANIMAL
+    WHERE ANIMAL_ID = #{animalId} AND MEMBER_ID = #{memberId}
+  </select>
+  
+  <!-- 동물 기본 정보 등록 -->
+   <insert id="insertAnimal" parameterType="AnimalVO">
+    <!-- ⭐ 시퀀스 값을 먼저 조회해서 VO에 설정 -->
+    <selectKey keyProperty="animalId" resultType="int" order="BEFORE">
+        SELECT SEQ_ANIMAL.NEXTVAL FROM DUAL
+    </selectKey>
+    
+    INSERT INTO ANIMAL (
+        ANIMAL_ID,
+        ANIMAL_NAME, 
+        ANIMAL_TYPE, 
+        BREED, 
+        GENDER, 
+        AGE, 
+        WEIGHT,
+        ADOPTION_STATUS, 
+        PERSONALITY, 
+        VIEW_COUNT,
+        CREATE_DATE
+    ) VALUES (
+        #{animalId},                          
+        #{animalName, jdbcType=VARCHAR},
+        #{animalType, jdbcType=VARCHAR},
+        #{breed, jdbcType=VARCHAR},
+        #{gender, jdbcType=VARCHAR},
+        #{age, jdbcType=NUMERIC},
+        #{weight, jdbcType=NUMERIC},
+        #{adoptionStatus, jdbcType=VARCHAR},
+        #{personality, jdbcType=VARCHAR},
+        0,
+        SYSDATE
+    )
+</insert>
+    
+    <!-- 의료 정보 등록 -->
+    <insert id="insertAnimalMedical" parameterType="AnimalMedicalVO">
+        INSERT INTO ANIMAL_MEDICAL (
+            ANIMAL_ID, 
+            VACCINATION, 
+            NEUTERED, 
+            MICROCHIP, 
+            SPECIAL_NOTE
+        ) VALUES (
+            #{animalId}, 
+            #{vaccination}, 
+            #{neutered}, 
+            #{microchip}, 
+            #{specialNote}
+        )
+    </insert>
+    
+    <!-- 구조 정보 등록 (PK가 ANIMAL_ID) -->
+    <insert id="insertAnimalRescue" parameterType="AnimalRescueVO">
+        INSERT INTO ANIMAL_RESCUE (
+            ANIMAL_ID, 
+            RESCUE_DATE, 
+            STORY
+        ) VALUES (
+            #{animalId}, 
+            #{rescueDate}, 
+            #{story}
+        )
+    </insert>
+
+    <!-- 이미지 등록 -->
+    <insert id="insertAnimalImage" parameterType="AnimalImageVO">
+        INSERT INTO ANIMAL_IMAGE (
+            IMAGE_ID,
+            ANIMAL_ID, 
+           ORIGIN_FILE_NAME, 
+            SAVE_FILE_NAME, 
+            IS_MAIN
+        ) VALUES (
+            SEQ_ANIMAL_IMAGE.NEXTVAL,
+            #{animalId}, 
+            #{originFileName}, 
+            #{saveFileName}, 
+            #{isMain}
+        )
+    </insert>
+</mapper>
+

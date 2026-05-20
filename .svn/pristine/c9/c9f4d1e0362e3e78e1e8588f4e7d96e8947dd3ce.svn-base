@@ -1,0 +1,267 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="ctp" value="${pageContext.request.contextPath}" />
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>관리자 대시보드</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700" rel="stylesheet">
+
+	<link rel="stylesheet" href="${ctp}/view/admin/css/common/admin-layout.css">
+	<link rel="stylesheet" href="${ctp}/view/admin/css/dashboard.css">
+
+	<script defer src="${ctp}/view/admin/js/admin-layout.js"></script>
+	<script defer src="${ctp}/view/admin/js/dashboard.js"></script>
+</head>
+<body>
+<div class="admin-layout">
+
+	<jsp:include page="/view/admin/common/admin-sidebar.jsp" />
+
+	<div class="admin-main-wrap">
+
+		<jsp:include page="/view/admin/common/admin-header.jsp" />
+
+		<main class="admin-content">
+			<section class="admin-page-title">
+				<div>
+					<h1>대시보드</h1>
+					<p>오늘도 보호소 운영 현황을 확인해주세요.</p>
+				</div>
+
+				<div class="admin-page-title__actions">
+					<button type="button" class="admin-btn admin-btn--gray">리포트 전체 보기</button>
+					<button type="button" class="admin-btn admin-btn--primary"
+					        onclick="location.href='${ctp}/admin/animal/register.do'">
+						<span class="material-symbols-outlined">add</span>
+						동물 신규 등록
+					</button>
+				</div>
+			</section>
+
+			<section class="admin-stats-grid">
+				<div class="admin-card stat-card">
+					<div class="stat-card__top">
+						<div class="stat-card__icon stat-card__icon--orange">
+							<span class="material-symbols-outlined">pets</span>
+						</div>
+						<span class="stat-badge">이번 주 +4</span>
+					</div>
+
+					<h3>전체 보호 동물</h3>
+					<div class="stat-card__value">
+						<strong>124</strong>
+						<span>마리</span>
+					</div>
+
+					<div class="stat-card__meta">
+						<span>강아지 82</span>
+						<span>고양이 42</span>
+					</div>
+				</div>
+
+				<div class="admin-card admin-card--wide">
+					<h3 class="card-title">입양 진행 현황</h3>
+
+					<div class="progress-box">
+						<div class="progress-item">
+							<div class="progress-item__label">
+								<span>입양 가능</span>
+								<span>42마리</span>
+							</div>
+							<div class="progress-bar">
+								<div class="progress-bar__fill progress-bar__fill--green" style="width:34%;"></div>
+							</div>
+						</div>
+
+						<div class="progress-item">
+							<div class="progress-item__label">
+								<span>진행 중</span>
+								<span>18마리</span>
+							</div>
+							<div class="progress-bar">
+								<div class="progress-bar__fill progress-bar__fill--orange" style="width:15%;"></div>
+							</div>
+						</div>
+
+						<div class="progress-item">
+							<div class="progress-item__label">
+								<span>이번 달 입양 완료</span>
+								<span>24건</span>
+							</div>
+							<div class="progress-bar">
+								<div class="progress-bar__fill progress-bar__fill--gray" style="width:19%;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="admin-card admin-card--highlight">
+					<h3>이번 달 입양 성공 스토리</h3>
+					<div class="highlight-value">
+						<strong>24</strong>
+						<span>가족</span>
+					</div>
+					<p>지난 달 대비 12% 증가한 수치입니다.</p>
+				</div>
+			</section>
+
+			<section class="admin-bottom-grid">
+				<div class="admin-feed-section">
+					<div class="section-header">
+						<h2>
+							<span class="material-symbols-outlined">history</span>
+							실시간 활동 피드
+						</h2>
+						<button type="button" class="text-btn">필터링</button>
+					</div>
+
+					<div class="admin-feed-list">
+						<div class="admin-feed-item">
+							<div class="admin-feed-item__icon admin-feed-item__icon--orange">
+								<span class="material-symbols-outlined">event_available</span>
+							</div>
+							<div class="admin-feed-item__content">
+								<div class="admin-feed-item__top">
+									<h4>입양 대면 상담 예약</h4>
+									<span>방금 전</span>
+								</div>
+								<p>김수정님과 ‘초코’의 상담 일정이 14:00로 확정되었습니다.</p>
+								<div class="admin-feed-item__meta">
+									<span class="tag">상담 예약</span>
+									<span>김관리 담당자</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="admin-feed-item">
+							<div class="admin-feed-item__icon admin-feed-item__icon--red">
+								<span class="material-symbols-outlined">report</span>
+							</div>
+							<div class="admin-feed-item__content">
+								<div class="admin-feed-item__top">
+									<h4>새로운 구조 제보 접수</h4>
+									<span>15분 전</span>
+								</div>
+								<p>강남구 논현동 인근에서 부상당한 유기견 제보 리포트가 도착했습니다.</p>
+								<div class="admin-feed-item__actions">
+									<button type="button">상세 내용 확인</button>
+									<button type="button">긴급 출동 요청</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="admin-feed-item">
+							<div class="admin-feed-item__icon admin-feed-item__icon--green">
+								<span class="material-symbols-outlined">medical_services</span>
+							</div>
+							<div class="admin-feed-item__content">
+								<div class="admin-feed-item__top">
+									<h4>진료 기록 업데이트</h4>
+									<span>1시간 전</span>
+								</div>
+								<p>‘나미’의 정기 예방 접종 및 심장사상충 검사가 완료되었습니다. 상태: 양호</p>
+								<div class="admin-feed-item__meta">
+									<span class="tag tag--gray">완료됨</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="admin-side-widgets">
+					<div class="admin-card">
+						<div class="section-header">
+							<h2>
+								<span class="material-symbols-outlined">calendar_month</span>
+								오늘의 일정
+							</h2>
+						</div>
+
+						<div class="schedule-date" id="todayDate"></div>
+
+						<div class="schedule-list">
+							<div class="schedule-item is-active">
+								<div class="schedule-item__time">오전 10:00</div>
+								<div class="schedule-item__body">
+									<h5>시설 정기 소독</h5>
+									<p>제 1, 2 보호동 전체 방역 실시</p>
+								</div>
+							</div>
+
+							<div class="schedule-item">
+								<div class="schedule-item__time">오후 02:30</div>
+								<div class="schedule-item__body">
+									<h5>입양 희망자 인터뷰</h5>
+									<p>피터님 패밀리 - ‘루루’ 입양 상담</p>
+								</div>
+							</div>
+
+							<div class="schedule-item">
+								<div class="schedule-item__time">오후 04:00</div>
+								<div class="schedule-item__body">
+									<h5>외부 수의사 방문</h5>
+									<p>신규 구조 동물 개별 건강검진</p>
+								</div>
+							</div>
+						</div>
+
+						<button type="button" class="admin-widget-btn">전체 일정 캘린더 보기</button>
+					</div>
+
+					<div class="admin-card featured-animal">
+						<div class="featured-animal__image">
+							<img src="https://via.placeholder.com/600x300?text=Animal" alt="이달의 주목 동물">
+							<span class="featured-animal__badge">이달의 주목 동물</span>
+						</div>
+
+						<div class="featured-animal__body">
+							<div class="featured-animal__top">
+								<h4>나미 (Nami)</h4>
+								<span class="tag tag--green">입양 가능</span>
+							</div>
+							<p>사람을 아주 좋아하고 온순한 성격의 치즈 고양이입니다. 현재 건강 상태 최상!</p>
+							<button type="button" class="admin-btn admin-btn--outline">프로필 공유하기</button>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<button type="button" class="fab-btn" onclick="location.href='${ctp}/admin/animal/register.do'">
+			<span class="material-symbols-outlined">add</span>
+		</button>
+	</div>
+</div>
+
+<nav class="admin-mobile-nav">
+	<a href="${ctp}/admin/main.do">
+		<span class="material-symbols-outlined">dashboard</span>
+		<span>대시보드</span>
+	</a>
+	<a href="${ctp}/admin/animal/register.do">
+		<span class="material-symbols-outlined">pets</span>
+		<span>등록</span>
+	</a>
+	<a href="${ctp}/admin/animal/list.do">
+		<span class="material-symbols-outlined">list_alt</span>
+		<span>목록</span>
+	</a>
+	<a href="${ctp}/admin/board/list.do">
+		<span class="material-symbols-outlined">article</span>
+		<span>게시판</span>
+	</a>
+	<a href="${ctp}/admin/member/list.do">
+		<span class="material-symbols-outlined">group</span>
+		<span>회원</span>
+	</a>
+</nav>
+</body>
+</html>

@@ -1,0 +1,40 @@
+package kr.or.ddit.admin.controller;
+
+import java.io.IOException;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import kr.or.ddit.member.vo.MemberVO;
+
+@WebServlet("/admin/main.do")
+public class AdminMainpage extends HttpServlet{
+	
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	
+		MemberVO loginUser =(MemberVO) req.getSession().getAttribute("loginUser");
+		
+		//로그인 안했으면 차단
+		if(loginUser ==null) {
+			resp.sendRedirect(req.getContextPath() +"/login.do");
+			return;
+		}
+		
+		//관리자 아닌경우 차단 
+		if(!"ADMIN".equals(loginUser.getRole())) {
+			resp.sendRedirect(req.getContextPath()+"/main.do");
+			return;
+		}
+		
+		//3. 대시보드 데이터조회(아직 미구현...)
+		
+		
+		//4. 관리자 대시보드 이동 
+		req.getRequestDispatcher("/view/admin/dashboard.jsp").forward(req, resp);
+		
+	}
+
+}

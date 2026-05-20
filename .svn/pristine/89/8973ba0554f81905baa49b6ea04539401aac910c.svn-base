@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mypage">
+
+    <!-- ==================================================== 
+    	통계 카드 조회 (관심동물 / 입양신청 / 작성글)
+    	===================================================== -->
+    <select id="getMypageStats" parameterType="string" resultType="MypageStatsVO">
+        SELECT
+            (SELECT COUNT(*) FROM FAVORITE_ANIMAL  WHERE MEMBER_ID = #{memberId}) AS favoriteCount,
+            (SELECT COUNT(*) FROM ADOPTION         WHERE MEMBER_ID = #{memberId}) AS adoptionCount,
+            (SELECT COUNT(*) FROM BOARD            WHERE MEMBER_ID = #{memberId}) AS postCount
+          FROM DUAL
+    </select>
+ 
+	<!-- =====================================================
+		 최근 활동 내역 조회
+		 =====================================================
+          - Oracle ROWNUM 방식으로 상위(최근) 5건 추출
+          - UNION ALL 활동 종류 3가지:
+           1. FAVORITE_ANIMAL  → 관심등록
+           2. DONATION         → 후원완료
+           3. ADOPTION         → 심사중
+         ===================================================== -->
+    <select id="getRecentActivities" parameterType="string" resultType="ActivityVO">
+        SELECT *
+          FROM (
+                /* 1. 관심동물 등록 */
+                SELECT
+                    0                                        AS activityId,
+                    'favorite'                               AS icon,
+                    '''' || A.ANIMAL_NAME || ''' 을(를) 관심 목록에 추가했습니다.' AS description,
+                    TO_CHAR(F.CREATE_DATE, 'YYYY.MM.DD')     AS actDate,
+                    'primary'                                AS badgeType,
+                    '관심등록'                               AS badgeLabel
+                  FROM FAVORITE_ANIMAL F
+                  JOIN ANIMAL A ON F.ANIMAL_ID = A.ANIMAL_ID
+                 WHERE F.MEMBER_ID = #{memberId}
+ 
+                UNION ALL
+ 
+                /* 2. 후원 완료 */
+                SELECT
+                    0                                        AS activityId,
+                    'volunteer_activism'                     AS icon,
+                    TO_CHAR(D.DONATION_AMOUNT, 'FM999,999,999') || '원을 후원했습니다.' AS description,
+                    TO_CHAR(D.DONATION_DATE, 'YYYY.MM.DD')   AS actDate,
+                    'green'                                  AS badgeType,
+                    '후원완료'                               AS badgeLabel
+                  FROM DONATION D
+                 WHERE D.MEMBER_ID = #{memberId}
+ 
+                UNION ALL
+ 
+                /* 3. 입양 신청 */
+                SELECT
+                    0                                        AS activityId,
+                    'assignment'                             AS icon,
+                    '''' || A.ANIMAL_NAME || ''' 의 입양 신청서가 접수되었습니다.' AS description,
+                    TO_CHAR(AD.APPLY_DATE, 'YYYY.MM.DD')     AS actDate,
+                    'blue'                                   AS badgeType,
+                    '심사중'                                 AS badgeLabel
+                  FROM ADOPTION AD
+                  JOIN ANIMAL A ON AD.ANIMAL_ID = A.ANIMAL_ID
+                 WHERE AD.MEMBER_ID = #{memberId}
+ 
+                ORDER BY actDate DESC
+               )
+         WHERE ROWNUM &lt;= 5
+    </select>
+
+	<!-- =====================================================
+         회원 정보 수정
+         - 비밀번호는 입력한 경우에만 UPDATE (if 태그 활용)
+         ===================================================== -->
+    <update id="updateMember" parameterType="MemberVO">
+        UPDATE MEMBER
+           SET NICKNAME   = #{nickname},
+               EMAIL      = #{email},
+               PHONE      = #{phone}
+               <if test="memberPw != null and memberPw != ''">
+               , MEMBER_PW = #{memberPw}
+               </if>
+               <if test="profileImg != null and profileImg != ''">
+               , PROFILE_IMG = #{profileImg}
+               </if>
+         WHERE MEMBER_ID  = #{memberId}
+    </update>
+ 
+    <!-- =====================================================
+         현재 비밀번호 일치 여부 확인
+         - 일치하는 행이 있으면 1, 없으면 0 반환
+         ===================================================== -->
+    <select id="checkCurrentPw" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM MEMBER
+         WHERE MEMBER_ID = #{memberId}
+           AND MEMBER_PW = #{currentPw}
+    </select>
+ 
+    <!-- =====================================================
+         닉네임 중복 확인
+         - 0이면 사용 가능, 1 이상이면 중복
+         ===================================================== -->
+    <select id="countByNickname" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+          FROM MEMBER
+         WHERE NICKNAME = #{nickname}
+    </select>
+    
+    <!-- =====================================================
+         회원 탈퇴 (소프트 삭제)
+         - 물리 삭제 대신 STATUS = 'N' 으로 변경
+         - ERD 기준 MEMBER 테이블의 STATUS 컬럼 사용
+         ===================================================== -->
+    <update id="withdrawMember"
+            parameterType="string">
+        UPDATE MEMBER
+           SET STATUS = 'N'
+         WHERE MEMBER_ID = #{memberId}
+    </update>
+</mapper>

@@ -1,0 +1,327 @@
+package kr.or.ddit.board.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.board.vo.BoardCommentVO;
+import kr.or.ddit.board.vo.BoardVO;
+import kr.or.ddit.board.vo.BoardFileVO;
+import kr.or.ddit.board.vo.BoardReportVO;
+import kr.or.ddit.util.MybatisUtil;
+
+
+public class BoardDaoImpl implements IBoardDao {
+    
+	// 싱글톤 객체 생성용 변수
+	private static IBoardDao dao;
+	
+	// 생성자는 밖에서 못 만들게 private
+	private BoardDaoImpl() {
+	}
+	
+	//dao 객체 1개만 만들어서 계속 사용
+	public static IBoardDao getInstance() {
+		if (dao == null) {
+			dao = new BoardDaoImpl();
+		}
+		return dao;
+
+	}
+	
+	//게시글 목록 조회
+	@Override
+	public List<BoardVO> selectBoardList(Map<String, Object> paramMap) {
+		SqlSession session = null;
+		List<BoardVO> boardList = null;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			boardList= session.selectList("kr.or.ddit.board.dao.IBoardDao.selectBoardList", paramMap);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				if (session != null) session.close();
+			}
+		return boardList;
+	}
+	
+	// 게시글 상세 조회
+	@Override
+	public BoardVO selectBoard(int boardId) {
+		SqlSession session = null;
+		BoardVO boardVo = null;
+		
+		try {
+			session= MybatisUtil.getsqlsession();
+			boardVo= session.selectOne("kr.or.ddit.board.dao.IBoardDao.selectBoard", boardId);
+		}catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			if(session != null)session.close();
+		}
+		
+		return boardVo;
+	}
+    
+	//조회수 증가
+	@Override
+	public int updateViewCount(int boardId) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+        try {
+        	session = MybatisUtil.getsqlsession();
+        	cnt = session.update("kr.or.ddit.board.dao.IBoardDao.updateViewCount", boardId);
+        	session.commit(); // update라 commit 필요
+        } catch (Exception e) {
+        	e.printStackTrace();
+        } finally {
+        	if (session != null) session.close();
+        }
+		return cnt;
+	}
+    
+	// 게시글 등록
+	@Override
+	public int insertBoard(BoardVO boardVo) {
+		SqlSession session = null;
+		int cnt= 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.insert("kr.or.ddit.board.dao.IBoardDao.insertBoard", boardVo);
+			session.commit(); // insert라 commit 필요
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+	}
+    
+	// 게시글 수정
+	@Override
+	public int updateBoard(BoardVO boardVo) {
+		SqlSession session =  null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.update("kr.or.ddit.board.dao.IBoardDao.updateBoard", boardVo);
+			session.commit(); // update라 commit 필요
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		
+		return cnt;
+	}
+    
+	// 게시글 삭제
+	@Override
+	public int deleteBoard(int boardId) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.delete("kr.or.ddit.board.dao.IBoardDao.deleteBoard", boardId);
+			session.commit(); //delete라 commit 필요
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+		
+	}
+    
+	// 댓글 목록 조회
+	@Override
+	public List<BoardCommentVO> selectCommentList(int boardId) {
+		SqlSession session = null;
+		List<BoardCommentVO> commentList = null;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			commentList = session.selectList("kr.or.ddit.board.dao.IBoardDao.selectCommentList", boardId);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return commentList;
+	}
+    
+	//댓글 등록
+	@Override
+	public int insertComment(BoardCommentVO commentVo) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.insert("kr.or.ddit.board.dao.IBoardDao.insertComment", commentVo);
+		    session.commit(); // insert라 commit 필요
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+    
+		
+	
+	}
+	
+	//댓글 삭제
+	@Override
+	public int deleteComment(int commentId) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.delete("kr.or.ddit.board.dao.IBoardDao.deleteComment", commentId);
+			session.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+	}
+	
+	@Override
+	public int updateLikeCount(int boardId) {
+		SqlSession session = null;
+		int cnt = 0;
+
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.update("kr.or.ddit.board.dao.IBoardDao.updateLikeCount", boardId);
+			session.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+	}
+
+	@Override
+	public String getMemberStatus(String memberId) {
+	    SqlSession session = null;
+	    String status = null;
+
+	    try {
+	        session = MybatisUtil.getsqlsession();
+	        status = session.selectOne("kr.or.ddit.board.dao.IBoardDao.getMemberStatus", memberId);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        if (session != null) session.close();
+	    }
+
+	    return status;
+	}
+
+	@Override
+	public int insertBoardFile(BoardFileVO fileVo) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.insert("kr.or.ddit.board.dao.IBoardDao.insertBoardFile", fileVo);
+			session.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+		
+	}
+
+	@Override
+	public List<BoardFileVO> selectFileList(int boardId) {
+		SqlSession session = null;
+		List<BoardFileVO> fileList = null;
+		
+		try {
+			
+			session = MybatisUtil.getsqlsession();
+			
+			// 해당 게시글의 첨부파일 목록 조회
+			fileList = session.selectList(
+			    "kr.or.ddit.board.dao.IBoardDao.selectFileList", boardId);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close(); // 세션 닫기
+		}
+		return fileList; // 조회 결과 반환
+		
+	}
+	
+	@Override
+	public BoardFileVO selectFile(int fileId) {
+		SqlSession session = null;
+		BoardFileVO file = null;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			
+			// DB에서 파일 정보 1개 조회
+			file = session.selectOne(
+					"kr.or.ddit.board.dao.IBoardDao.selectFile", fileId);
+		} catch (Exception e) {
+			e.printStackTrace();		
+	    }  finally {
+			if (session != null) session.close(); // 세션 종료
+		}
+	    return file; // 조회 결과 반환
+		
+	}
+	
+	@Override
+	public int insertBoardReport(BoardReportVO reportVo) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.insert("kr.or.ddit.board.dao.IBoardDao.insertBoardReport", reportVo);
+			session.commit();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+		
+		
+	}
+	
+	@Override
+	public int countBoardReport(int boardId) {
+		SqlSession session = null;
+		int cnt = 0;
+		
+		try {
+			session = MybatisUtil.getsqlsession();
+			cnt = session.selectOne("kr.or.ddit.board.dao.IBoardDao.countBoardReport", boardId);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) session.close();
+		}
+		return cnt;
+		
+	}
+}

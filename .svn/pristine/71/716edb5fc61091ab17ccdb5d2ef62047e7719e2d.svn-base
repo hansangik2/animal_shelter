@@ -1,0 +1,259 @@
+@charset "UTF-8";
+
+/* 상세 페이지 전체 영역 */
+.detail-page {
+    width: 100%;
+    background-color: #f8f7f4;
+    padding: 60px 0 100px;
+    min-height: 700px;
+}
+
+/* 가운데 정렬 박스 */
+.detail-inner {
+    width: 1100px;
+    margin: 0 auto;
+}
+
+/* 목록으로 돌아가기 */
+.back-link {
+    margin-bottom: 25px;
+}
+
+.back-link a {
+    text-decoration: none;
+    color: #888;
+    font-size: 16px;
+}
+
+/* 제목 */
+.detail-page-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 15px;
+}
+
+/* 설명 문구 */
+.detail-page-sub {
+    font-size: 20px;
+    color: #8b8f97;
+    margin-bottom: 40px;
+}
+
+/* 게시글 박스 */
+.detail-box {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    padding: 35px;
+}
+
+/* 게시글 유형 뱃지 */
+.detail-type {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #fff2e3;
+    color: #f39a2d;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+/* 게시글 제목 */
+.detail-title {
+    font-size: 38px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 18px;
+}
+
+/* 작성자/작성일/조회수 영역 */
+.detail-info {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    color: #777;
+    font-size: 15px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 28px;
+}
+
+/* 본문 */
+.detail-content pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: 'Public Sans', sans-serif;
+    font-size: 18px;
+    line-height: 1.9;
+    color: #333;
+    min-height: 200px;
+}
+
+/* 추천 버튼 영역 */
+.detail-like-area {
+    margin-top: 25px;
+}
+
+.detail-like-area button {
+    border: none;
+}
+
+/* 신고 버튼 영역 */
+.detail-report-area {
+    margin-top: 10px; /* 추천 버튼과 간격 */
+}
+
+/* 신고 버튼 스타일 (선택) */
+.detail-report-area .detail-btn {
+    opacity: 0.9;
+}
+
+.detail-report-area .detail-btn:hover {
+    opacity: 1;
+}
+
+/* 수정/삭제 버튼 영역 */
+.detail-btn-area {
+    margin-top: 35px;
+    display: flex;
+    gap: 14px;
+}
+
+/* 공통 버튼 */
+.detail-btn {
+    display: inline-block;
+    min-width: 130px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    border-radius: 28px;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* 주황 버튼 */
+.orange-btn {
+    background-color: #f39a2d;
+    color: #fff;
+}
+
+/* 회색 버튼 */
+.gray-btn {
+    background-color: #f2f2f2;
+    color: #444;
+}
+
+/* ================= 댓글 영역 ================= */
+
+/* 댓글 전체 박스 */
+.comment-box {
+    margin-top: 35px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 20px;
+    padding: 30px;
+}
+
+/* 댓글 제목 */
+.comment-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #222;
+}
+
+/* 댓글 폼 너비 */
+.comment-form {
+    width: 520px;
+}
+
+/* 댓글 한 줄 */
+.comment-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: flex-start;
+}
+
+/* 첫 줄 라벨 / 둘째 줄 빈칸 폭 맞추기 */
+.comment-row label,
+.comment-label-space {
+    width: 85px;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #222;
+}
+
+/* 작성자 input */
+.comment-row input[type="text"] {
+    width: 230px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 댓글 입력창 */
+.comment-row textarea {
+    width: 230px;
+    height: 90px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    font-family: inherit;
+}
+
+/* 댓글 등록 버튼 */
+.comment-submit-btn {
+    height: 90px;
+    padding: 0 18px;
+    border: 1px solid #ccc;
+    background-color: #f5f5f5;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* 댓글 리스트 영역 */
+.comment-list {
+    width: 520px;
+    margin-top: 20px;
+}
+
+/* 댓글 없음 문구 */
+.comment-empty {
+    margin-left: 95px;
+    color: #555;
+}
+
+/* 댓글 한 개 */
+.comment-item {
+    border-top: 1px solid #eee;
+    padding: 14px 0;
+}
+
+/* 댓글 작성자/날짜 */
+.comment-meta {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #777;
+}
+
+.comment-member {
+    font-weight: 700;
+    color: #333;
+}
+
+/* 댓글 내용 */
+.comment-content {
+    font-size: 15px;
+    color: #222;
+    line-height: 1.6;
+    margin-left: 0;
+}

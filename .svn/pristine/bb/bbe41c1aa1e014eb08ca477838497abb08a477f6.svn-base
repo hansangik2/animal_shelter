@@ -1,0 +1,501 @@
+/* --- 1. 기본 변수 및 초기화 --- */
+:root {
+    --primary-color: #f37321;
+    --navy-dark: #1a233a;
+    --bg-light: #fdfaf7; /* 검색창 및 섹션 배경색 */
+    --text-gray: #666;
+    --border-color: #eee;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Pretendard', sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+.layout-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* --- 2. 헤더 (header.jsp 연동 스타일) --- */
+.site-header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 18px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-inner {
+	max-width: 1140px;
+	margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.header-left { 
+    display: flex; 
+    align-items: center; 
+    gap: 40px; 
+}
+
+.site-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--navy-dark);
+}
+
+.site-logo .logo-icon {
+	font-size: 1.5rem;
+	color: var(--primary-color);
+}
+
+.main-nav { display: flex; gap: 25px; }
+.nav-link {
+    text-decoration: none;
+    color: #444;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* ★ 테두리 없는 검색창 (시안 반영) ★ */
+.header-right { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    background: var(--bg-light); /* 연한 베이지색 배경 */
+    padding: 8px 18px;
+    border-radius: 30px;
+    border: none !important; /* 테두리 삭제 */
+    width: 240px;
+}
+
+.search-input {
+    border: none;
+    background: none;
+    outline: none;
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.search-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+}
+
+.admin-link {
+	background-color: var(--navy-dark);
+	color: #fff;
+	padding: 8px 20px;
+	border-radius: 30px;
+	text-decoration: none;
+	font-size: 0.85rem;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	transition: 0.3s;
+}
+
+.header-divider { 
+    width: 1px; 
+    height: 14px; 
+    background: #ddd; 
+    margin: 0 5px; 
+}
+
+.profile-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #333;
+    padding: 5px 15px;
+    border: 1px solid #eee;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.icon-circle {
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	border: 1px solid #eee;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #666;
+}
+
+.guide-hero {
+	color: white;
+	padding: 120px 0;
+	text-align: center;
+	border-radius: 0 0 50px 50px;
+	background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url
+}
+
+.profile-thumb { 
+    width: 28px; 
+    height: 28px; 
+    border-radius: 50%; 
+    overflow: hidden; 
+    background: #eee; 
+}
+
+.profile-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.icon-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    text-decoration: none;
+}
+
+/* --- 3. 입양 신청 자격 섹션 (레이아웃 오류 수정) --- */
+.section-padding { padding: 80px 0; }
+
+.section-title { 
+	margin-bottom: 40px; 
+}
+
+.section-title h2 { 
+	font-size: 2.2rem; 
+	font-weight: 800; 
+	margin-bottom: 10px; 
+}
+.section-title h2 span { 
+	color: var(--primary-color); 
+	font-size: 2.2rem; 
+	margin-left: 10px; 
+	font-weight: 800; 
+}
+
+.section-title.text-left {
+	text-align: left;
+}
+
+.guide-hero {
+	color: white;
+	padding: 120px 0;
+	text-align: center;
+	border-radius: 0 0 50px 50px;
+    background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('../images/animalguide/family-animal.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat; 
+}
+
+.guide-hero p {
+	font-size: 1rem;
+	text-transform: uppercase;
+	color: rgba(255,255,255,0.8);
+}
+
+.guide-hero h1 {
+	font-size: 2.5rem;
+	font-weight: 800;
+	color: white;
+	line-height: 1.4;
+	margin-top: 10px;
+}
+
+.eligibility-grid {
+    display: flex; /* 가로 배치 보장 */
+    align-items: center;
+    gap: 60px;
+    margin-top: 20px;
+}
+
+.eligibility-content {
+    flex: 1; /* 텍스트 영역 확장 */
+}
+
+/* ★ 문장이 가로로 나오도록 설정 ★ */
+.check-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.check-list li {
+    position: relative;
+    padding: 25px 30px 25px 75px; /* 아이콘 공간 확보 */
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.04);
+    display: block; /* 세로형 방지 */
+    word-break: keep-all; /* 가로 가독성 향상 */
+}
+
+.check-list li strong {
+    display: block;
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+    color: #111;
+}
+
+.check-list li::before {
+    content: 'check_circle';
+    font-family: 'Material Symbols Outlined';
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-color);
+    font-size: 32px;
+    font-variation-settings: 'FILL' 1;
+}
+
+/* ★ 사진 크기 고정 및 제어 ★ */
+.eligibility-image-wrap {
+    flex: 0 0 480px; /* 사진 너비 시안에 맞춰 제한 */
+    height: 380px; /* 높이 제한 */
+    border-radius: 40px;
+    overflow: hidden;
+}
+
+.guide-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 찌그러짐 방지 */
+    display: block;
+}
+
+/* --- 4. 입양 진행 절차 --- */
+.process-steps { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 25px; 
+}
+
+.step-item { 
+    display: flex; 
+    align-items: center; 
+    background: #fff; 
+    padding: 35px; 
+    border-radius: 25px; 
+    border: 1px solid #f0f0f0; 
+    box-shadow: 0 5px 20px rgba(0,0,0,0.03); 
+}
+
+/* ★ 숫자 중앙 정렬 및 크기 고정 ★ */
+.step-number { 
+    width: 55px !important; 
+    height: 55px !important; 
+    background: #f37321 !important; 
+    color: #fff !important; 
+    border-radius: 50% !important; 
+    
+    /* 숫자를 원의 정중앙으로 보냄 */
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    
+    font-weight: 800 !important; 
+    font-size: 1.3rem !important; 
+    margin-right: 40px !important; 
+    flex-shrink: 0 !important; 
+    padding: 0 !important; /* 내부 여백 제거 */
+}
+
+.step-content {
+    flex: 1;
+}
+
+/* ★ 모든 제목 크기를 1번 카드 수준으로 하향 조정 ★ */
+.step-content h3 { 
+    font-size: 1.35rem !important; /* 1.5rem에서 약간 줄임 */
+    font-weight: 700 !important;   /* 너무 굵지 않게 조정 */
+    margin-bottom: 10px !important; 
+    color: #000 !important; 
+    letter-spacing: -0.5px;
+}
+
+.step-number {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+}
+
+/* 본문 내용 색상 및 크기 통일 */
+.step-content p { 
+    color: #888 !important; 
+    font-size: 1.05rem !important; 
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* --- 5. 사후 관리 프로그램 카드 --- */
+.after-care-header { 
+	display: flex; 
+	justify-content: space-between; 
+	align-items: flex-end;
+    margin-bottom: 50px; 
+}
+
+.program-grid { 
+	display: grid; 
+	grid-template-columns: repeat(3, 1fr); 
+	gap: 30px; 
+}
+
+.program-card { 
+	background: #fff; 
+	padding: 45px 35px; 
+	border-radius: 30px; 
+	box-shadow: 0 10px 40px rgba(0,0,0,0.05); 
+	border: 1px solid #f8f8f8; 
+}
+
+.icon-box { 
+	width: 65px; 
+    height: 65px; 
+    border-radius: 18px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    margin-bottom: 30px; 
+}
+
+.icon-box.orange { 
+	background: #fff4ed; 
+	color: #f37321; 
+}
+
+.icon-box.red { 
+	background: #fff0f0; 
+	color: #ff5e5e;
+}
+
+.icon-box.blue { 
+	background: #f0f7ff; 
+	color: #3b82f6; 
+}
+
+.program-card h4 { 
+	font-size: 1.3rem; 
+	font-weight: 800;
+	margin-bottom: 15px; 
+}
+
+.program-card p { 
+	color: #777; 
+	font-size: 0.95rem; 
+	line-height: 1.7; 
+}
+
+/* --- 6. 하단 CTA 배너 --- */
+.cta-banner {
+    background: var(--primary-color);
+    border-radius: 40px;
+    padding: 70px 80px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.cta-text h2 { 
+	font-size: 2.4rem; 
+	font-weight: 800; 
+	line-height: 1.4; 
+	margin: 0; 
+}
+
+.btn { 
+	padding: 18px 45px; 
+	border-radius: 15px; 
+	font-weight: 700; 
+	border: none; 
+	cursor: pointer; 
+	font-size: 1.1rem; 
+	transition: 0.3s; 
+}
+
+.btn-white { 
+	background: #fff; 
+	color: var(--primary-color); 
+}
+
+.btn-white:hover { 
+	background: #fdf2e9; 
+	transform: translateY(-5px); 
+}
+
+.btn-outline { 
+	background: transparent; 
+	border: 1.5px solid #fff; 
+	color: #fff; 
+}
+
+/* --- 7. 푸터 --- */
+.site-footer { 
+	background: var(--navy-dark); 
+	color: #adb5bd; 
+	padding: 80px 0 40px; 
+	margin-top: 100px; 
+}
+.footer-grid { 
+	display: grid; 
+	grid-template-columns: 2fr repeat(3, 1fr); 
+	gap: 50px; 
+	border-bottom: 1px solid rgba(255,255,255,0.1); 
+	padding-bottom: 50px; 
+}
+
+.footer-logo { 
+	color: #fff; 
+	font-size: 1.5rem; 
+	font-weight: 700; 
+	display: flex; 
+	align-items: center;
+	gap: 10px; 
+	margin-bottom: 25px; 
+}
+
+.footer-column h4 { 
+	color: #fff; 
+	margin-bottom: 25px; 
+	font-size: 1.1rem; 
+}
+
+.footer-column a { 
+	color: #adb5bd; 
+	text-decoration: none; 
+}
+.footer-contact li { 
+	display: flex; 
+	align-items: center; 
+	gap: 12px; 
+	color: #fff; 
+	margin-bottom: 15px;
+}

@@ -1,0 +1,47 @@
+document.addEventListener("DOMContentLoaded", function () {
+	const ctp = document.body.dataset.ctp || "";
+
+	// 신청 행 클릭 시 신청 동기 토글
+	document.querySelectorAll(".apply-row").forEach(row => {
+		row.addEventListener("click", function (e) {
+			if (e.target.closest(".action-btn")) {
+				return;
+			}
+
+			const targetId = this.dataset.target;
+			const detailRow = document.getElementById(targetId);
+
+			if (detailRow) {
+				detailRow.classList.toggle("is-open");
+			}
+		});
+	});
+
+	// 승인 / 반려
+	document.querySelectorAll(".action-btn").forEach(button => {
+		button.addEventListener("click", function (e) {
+			e.stopPropagation();
+
+			const volunteerId = this.dataset.id;
+			const status = this.dataset.status;
+
+			let message = "처리하시겠습니까?";
+			if (status === "승인") {
+				message = "해당 신청자를 승인하시겠습니까?";
+			} else if (status === "반려") {
+				message = "해당 신청자를 반려하시겠습니까?";
+			}
+
+			if (!confirm(message)) {
+				return;
+			}
+
+			location.href =
+				ctp +
+				"/admin/volunteer/status.do?volunteerId=" +
+				encodeURIComponent(volunteerId) +
+				"&status=" +
+				encodeURIComponent(status);
+		});
+	});
+});

@@ -1,0 +1,110 @@
+package kr.or.ddit.board.service;
+
+import java.util.List;
+import java.util.Map;
+
+import kr.or.ddit.board.dao.BoardDaoImpl;
+import kr.or.ddit.board.dao.IBoardDao;
+import kr.or.ddit.board.vo.BoardCommentVO;
+import kr.or.ddit.board.vo.BoardFileVO;
+import kr.or.ddit.board.vo.BoardReportVO;
+import kr.or.ddit.board.vo.BoardVO;
+
+public class BoardServiceImpl implements BoardService {
+    
+	private static BoardService service;
+	private IBoardDao boardDao;
+	
+	private BoardServiceImpl() {
+		boardDao = BoardDaoImpl.getInstance();
+	}
+	
+	public static BoardService getInstance() {
+		if (service == null) {
+			service = new BoardServiceImpl();
+		}
+		return service;
+	}
+	
+	@Override
+	public List<BoardVO> getBoardList(Map<String, Object> paramMap) {		
+		return boardDao.selectBoardList(paramMap);
+	}
+    
+	@Override
+	public BoardVO getBoard(int boardId) {		
+		return boardDao.selectBoard(boardId);
+	}
+    
+	@Override
+	public int increaseViewCount(int boardId) {		
+		return boardDao.updateViewCount(boardId);
+	}
+    
+	@Override
+	public int registBoard(BoardVO boardVo) {		
+		return boardDao.insertBoard(boardVo);
+	}
+    
+	@Override
+	public int modifyBoard(BoardVO boardVo) {		
+		return boardDao.updateBoard(boardVo);
+	}
+    
+	@Override
+	public int removeBoard(int boardId) {		
+		return boardDao.deleteBoard(boardId);
+	}
+    
+	@Override
+	public List<BoardCommentVO> getCommentList(int boardId) {	
+		return boardDao.selectCommentList(boardId);
+	}
+
+	@Override
+	public int registComment(BoardCommentVO commentVo) {
+		return boardDao.insertComment(commentVo);
+	}
+	
+	@Override
+	public int deleteComment(int commentId) {
+		return boardDao.deleteComment(commentId);
+	}
+	
+	@Override
+	public int increaseLikeCount(int boardId) {
+		return boardDao.updateLikeCount(boardId);
+	}
+	
+	@Override
+	public String getMemberStatus(String memberId) {
+		return boardDao.getMemberStatus(memberId);
+	}
+
+	@Override
+	public int insertBoardFile(BoardFileVO fileVo) {
+		return boardDao.insertBoardFile(fileVo);
+	}
+	
+	@Override
+	public List<BoardFileVO> getFileList(int boardId) {
+		return boardDao.selectFileList(boardId);
+		
+	}
+	
+	@Override
+	public BoardFileVO getFile(int fileId) {
+		return boardDao.selectFile(fileId);
+		
+	}
+	
+	@Override
+	public int registBoardReport(BoardReportVO reportVo) {
+		return boardDao.insertBoardReport(reportVo);		
+	}
+	
+	@Override
+	public int getBoardReportCount(int boardId) {
+		return boardDao.countBoardReport(boardId);
+	}
+}

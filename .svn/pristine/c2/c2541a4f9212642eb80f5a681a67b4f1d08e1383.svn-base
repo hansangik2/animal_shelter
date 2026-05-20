@@ -1,0 +1,89 @@
+package kr.or.ddit.mypage.service;
+
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.mypage.dao.IMypageDAO;
+import kr.or.ddit.mypage.dao.MypageDAOImpl;
+import kr.or.ddit.mypage.vo.ActivityVO;
+import kr.or.ddit.mypage.vo.MypageStatsVO;
+
+import java.util.List;
+
+/**
+ * 마이페이지 서비스 구현체 (싱글톤)
+ */
+public class MypageServiceImpl implements IMypageService
+{
+
+	// ── 싱글톤 ──────────────────────────────────────
+	private static MypageServiceImpl instance;
+
+	private MypageServiceImpl()
+	{
+	}
+
+	public static MypageServiceImpl getInstance()
+	{
+		if (instance == null)
+		{
+			instance = new MypageServiceImpl();
+		}
+		return instance;
+	}
+	// ─────────────────────────────────────────────────
+
+	private IMypageDAO mypageDAO = MypageDAOImpl.getInstance();
+
+	/**
+	 * 마이페이지 통계 카드 데이터 조회
+	 */
+	@Override
+	public MypageStatsVO getMypageStats(String memberId)
+	{
+		return mypageDAO.getMypageStats(memberId);
+	}
+
+	/**
+	 * 최근 활동 내역 조회 (최근 5건)
+	 */
+	@Override
+	public List<ActivityVO> getRecentActivities(String memberId)
+	{
+		return mypageDAO.getRecentActivities(memberId);
+	}
+
+	/**
+	 * 회원 정보 수정 - 비밀번호 변경 요청이 있는 경우: 현재 비밀번호 일치 여부 먼저 확인 - 일치하지 않으면 0 반환 (실패)
+	 */
+	@Override
+	public int updateMember(MemberVO updateVO, String currentPw)
+	{
+
+		// 비밀번호 변경 요청이 있는 경우 현재 비밀번호 검증
+		if (updateVO.getMemberPw() != null && !updateVO.getMemberPw().isEmpty())
+		{
+			boolean pwMatch = mypageDAO.checkCurrentPw(updateVO.getMemberId(), currentPw);
+			if (!pwMatch)
+				return 0;
+		}
+
+		return mypageDAO.updateMember(updateVO);
+	}
+
+	/**
+	 * 닉네임 중복 확인 - 해당 닉네임을 가진 회원이 없으면 사용 가능(true)
+	 */
+	@Override
+	public boolean isNicknameAvailable(String nickname)
+	{
+		return mypageDAO.countByNickname(nickname) == 0;
+	}
+
+	/**
+	 * 회원 탈퇴 - 물리 삭제 대신 STATUS = 'N' 으로 소프트 삭제 처리
+	 */
+	@Override
+	public int withdrawMember(String memberId)
+	{
+		return mypageDAO.withdrawMember(memberId);
+	}
+}

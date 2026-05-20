@@ -1,0 +1,140 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ page import="kr.or.ddit.member.vo.MemberVO"%>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>커뮤니티 게시판</title>
+
+<!--header/footer에서 쓰는 폰트,아이콘 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+<link
+	href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&display=swap"
+	rel="stylesheet">
+<link
+	href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+	rel="stylesheet">
+
+<!-- css -->
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/css/common/common.css">
+<link rel="stylesheet"
+	href="${pageContext.request.contextPath}/css/board-list.css">
+</head>
+<body>
+
+	<%@ include file="/view/common/header.jsp"%>
+
+	<main class="board-page">
+		<div class="board-inner">
+			<h2 class="page-title">커뮤니티</h2>
+			<p class="page-sub">유기동물 보호소의 소식과 이야기를 함께 나누는 공간입니다.</p>
+
+			<!-- 게시판 유형/검색 -->
+			<div class="board-search-wrap">
+				<div class="category-wrap">
+					<a
+						href="${pageContext.request.contextPath}/board/list.do?boardType=전체"
+						class="category-btn">전체</a> <a
+						href="${pageContext.request.contextPath}/board/list.do?boardType=공지"
+						class="category-btn">공지사항</a> <a
+						href="${pageContext.request.contextPath}/board/list.do?boardType=자유"
+						class="category-btn">자유게시판</a> <a
+						href="${pageContext.request.contextPath}/board/list.do?boardType=입양후기"
+						class="category-btn">입양후기</a> <a
+						href="${pageContext.request.contextPath}/board/list.do?boardType=자원봉사후기"
+						class="category-btn">자원봉사후기</a>
+				</div>
+
+				<form method="get"
+					action="${pageContext.request.contextPath}/board/list.do"
+					class="search-box">
+					<input type="hidden" name="boardType" value="${boardType}">
+					<input type="text" name="keyword" value="${keyword}"
+						placeholder="검색어를 입력하세요">
+					<button type="submit">검색</button>
+				</form>
+			</div>
+
+			<!-- 게시글 목록 -->
+			<table class="board-table">
+				<thead>
+					<tr>
+						<th>번호</th>
+						<th>유형</th>
+						<th>제목</th>
+						<th>작성자</th>
+						<th>작성일</th>
+						<th>조회수</th>
+						<th>추천수</th>
+					</tr>
+				</thead>
+				<tbody>
+					<%
+					java.util.List<kr.or.ddit.board.vo.BoardVO> boardList = (java.util.List<kr.or.ddit.board.vo.BoardVO>) request
+							.getAttribute("boardList");
+
+					if (boardList == null || boardList.size() == 0) {
+					%>
+					<tr>
+						<td colspan="7">등록된 게시글이 없습니다.</td>
+					</tr>
+					<%
+					} else {
+					for (kr.or.ddit.board.vo.BoardVO board : boardList) {
+					%>
+					<tr>
+						<td><%=board.getBoardId()%></td>
+						<td><%=board.getBoardType()%></td>
+						<td><a
+							href="<%=request.getContextPath()%>/board/detail.do?boardId=<%=board.getBoardId()%>">
+								<%=board.getTitle()%>
+						</a></td>
+						<td><%=board.getMemberId()%></td>
+						<td><%=board.getCreateDate()%></td>
+						<td><%=board.getViewCount()%></td>
+						<td><%=board.getLikeCount()%></td>
+					</tr>
+					<%
+					}
+					}
+					%>
+				</tbody>
+			</table>
+
+			<!-- 글쓰기 버튼 -->
+			<%
+			MemberVO loginUserForBtn = (MemberVO) session.getAttribute("loginUser");
+			String userRoleForBtn = "USER";
+
+			if (loginUserForBtn != null) {
+				userRoleForBtn = loginUserForBtn.getRole();
+			}
+
+			String boardTypeForBtn = (String) request.getAttribute("boardType");
+			if (boardTypeForBtn == null)
+				boardTypeForBtn = "";
+			%>
+
+			<div class="btn-area">
+				<%
+				// 일반회원 + 공지사항 페이지면 글쓰기 버튼 숨김
+				if (!("USER".equals(userRoleForBtn) && "공지사항".equals(boardTypeForBtn))) {
+				%>
+				<a href="<%=request.getContextPath()%>/board/write.do"
+					class="write-btn">글쓰기</a>
+				<%
+				}
+				%>
+			</div>
+		</div>
+	</main>
+
+	<%@ include file="/view/common/footer.jsp"%>
+
+
+</body>
+</html>

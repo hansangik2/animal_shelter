@@ -1,0 +1,37 @@
+package kr.or.ddit.admin.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.session.SqlSession;
+
+import kr.or.ddit.common.vo.PageVO;
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_ApplyVO;
+import kr.or.ddit.volunteer_recruit.vo.Volunteer_RecruitVO;
+
+public interface IadminDao {
+	public List<MemberVO> selectMemberList(SqlSession session, PageVO pageVO);
+	
+	public int selectMemberCount(SqlSession session, PageVO pageVO);
+	
+	public int selectTodayJoinCount(SqlSession session);
+	
+	public MemberVO selectMemberDetail(SqlSession session, String memberId);
+	
+	int updateMemberRole(SqlSession session, Map<String, String> param);
+	
+	int updateMemberStatus(SqlSession session, Map<String, String> param);
+	
+	int deleteMember(SqlSession session, String memberId);
+	
+	List<Volunteer_RecruitVO> selectRecruitList(SqlSession session);
+	
+	Volunteer_RecruitVO selectRecruitDetail(SqlSession session, int recruitId);
+	
+	List<Volunteer_ApplyVO> selectApplyListByRecruitId(SqlSession session, int recruitId);
+	
+	int updateApplyStatus(SqlSession session, Map<String, Object> param);
+	
+	
+}

@@ -1,0 +1,55 @@
+package kr.or.ddit.mypage.service;
+
+import kr.or.ddit.member.vo.MemberVO;
+import kr.or.ddit.mypage.vo.ActivityVO;
+import kr.or.ddit.mypage.vo.MypageStatsVO;
+
+import java.util.List;
+
+/**
+ * 마이페이지 서비스 인터페이스
+ */
+public interface IMypageService
+{
+
+	/**
+	 * 마이페이지 통계 카드 데이터 조회
+	 *
+	 * @param memberId 로그인한 회원 ID
+	 * @return MypageStatsVO
+	 */
+	MypageStatsVO getMypageStats(String memberId);
+
+	/**
+	 * 최근 활동 내역 조회 (최근 5건)
+	 *
+	 * @param memberId 로그인한 회원 ID
+	 * @return List<ActivityVO>
+	 */
+	List<ActivityVO> getRecentActivities(String memberId);
+
+	/**
+	 * 회원 정보 수정
+	 *
+	 * @param updateVO  변경할 회원 정보 VO
+	 * @param currentPw 현재 비밀번호 (비밀번호 변경 시 검증용, 변경 없으면 null)
+	 * @return 수정된 행 수 (1: 성공, 0: 실패)
+	 */
+	int updateMember(MemberVO updateVO, String currentPw);
+
+	/**
+	 * 닉네임 중복 확인
+	 *
+	 * @param nickname 확인할 닉네임
+	 * @return true: 사용 가능, false: 중복
+	 */
+	boolean isNicknameAvailable(String nickname);
+
+	/**
+	 * 회원 탈퇴 - MEMBER 테이블 STATUS 를 'N' 으로 변경 (물리 삭제 X)
+	 *
+	 * @param memberId 탈퇴할 회원 ID
+	 * @return 수정된 행 수 (1: 성공, 0: 실패)
+	 */
+	int withdrawMember(String memberId);
+}

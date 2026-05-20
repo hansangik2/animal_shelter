@@ -1,0 +1,46 @@
+/* map.js */
+window.onload = function() {
+    // 1. 지도를 표시할 담을 컨테이너 생성
+    var mapContainer = document.getElementById('map'); 
+    
+    var mapOption = { 
+        // 2. 지도의 중심좌표 (이미지 속 대덕빌딩 좌표: 대전 중구 중앙로 121)
+        center: new kakao.maps.LatLng(36.326815, 127.422320), 
+        level: 3 // 지도의 확대 레벨
+    };
+
+    // 3. 지도 생성
+    var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+    // 4. 마커가 표시될 위치 설정
+    var markerPosition  = new kakao.maps.LatLng(36.326815, 127.422320); 
+
+    // 5. 마커 생성
+    var marker = new kakao.maps.Marker({
+        position: markerPosition
+    });
+
+    // 6. 마커가 지도 위에 표시되도록 설정
+    marker.setMap(map);
+
+    // 7. 마커를 클릭했을 때 나타날 정보창(InfoWindow) 설정
+    var iwContent = '<div style="padding:5px; font-size:12px; text-align:center; width:150px;">' +
+                    '너와 나의 연결고리<br>' +
+                    '<a href="https://map.kakao.com/link/map/너와 나의 연결고리,36.326815,127.422320" style="color:blue" target="_blank">큰지도보기</a> ' +
+                    '<a href="https://map.kakao.com/link/to/너와 나의 연결고리,36.326815,127.422320" style="color:blue" target="_blank">길찾기</a>' +
+                    '</div>',
+        iwPosition = new kakao.maps.LatLng(36.326815, 127.422320);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        position : iwPosition, 
+        content : iwContent 
+    });
+      
+    // 마커 위에 인포윈도우 표시
+    infowindow.open(map, marker); 
+
+    // 8. 창 크기가 변경될 때 지도 중심을 유지하는 기능 (반응형 대응)
+    window.addEventListener('resize', function() {
+        map.setCenter(markerPosition);
+    });
+};
